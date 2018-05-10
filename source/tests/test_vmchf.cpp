@@ -12,7 +12,7 @@ SUITE(VMCHF) {
     TEST(energiesw1N2D2L30) {
         /* check that energy in case without jastrow reproduces HF energy
          * (within std) */
-        YAML::Node node = YAML::LoadFile("tests/w_1.0_D_2_N_2_L_30.yaml");
+        YAML::Node node = YAML::LoadFile("tests/inputs/w_1.0_D_2_N_2_L_30.yaml");
         node["test"] = true;
         node["jastrow"] = false;
         node["progress"] = false;
@@ -30,7 +30,7 @@ SUITE(VMCHF) {
     TEST(energiesw028N2D2L30) {
         /* check that energy in case without jastrow reproduces HF energy
          * (within std) */
-        YAML::Node node = YAML::LoadFile("tests/w_0.28_D_2_N_2_L_20.yaml");
+        YAML::Node node = YAML::LoadFile("tests/inputs/w_0.28_D_2_N_2_L_20.yaml");
         node["test"] = true;
         node["jastrow"] = false;
         node["progress"] = false;
