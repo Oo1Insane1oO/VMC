@@ -119,12 +119,12 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
         if (myRank == 0) {
             /* let root distribute initial parameters */
             if (inputs["numhiddenbias"]) {
-                /* Use gaussina distributed for RBM */
+                /* Use Gaussian distributed for RBM */
                 parametersBuffer = parametersBuffer.unaryExpr([](double dummy) {
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::high_resolution_clock::now().
                                         time_since_epoch().count()).substr(10)));
-                        static std::normal_distribution<double> nd(0.0,0.1);
+                        static std::normal_distribution<double> nd(0.0,0.001);
                         return nd(rng);
                     });
             } else { 

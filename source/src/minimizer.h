@@ -57,8 +57,8 @@ class Minimizer {
         void setParamsMTLS() {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
-            pMTLS.mu = 0.0001;
-            pMTLS.eta = 0.9;
+            pMTLS.mu = 0.001;
+            pMTLS.eta = 0.6;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
@@ -68,13 +68,13 @@ class Minimizer {
 
         void setParamsSABFGS() {
             /* set parameters used in SABFGS method */
-            beta = 0.1;
+            beta = 0.6;
         } // end function setParamsSABFGS
         
         void minimizeSD() {
             /* find optimal variational parameters */
             if (!hasSetup) {
-                step = 0.01;
+                step = 0.001;
 
                 hasSetup = true;
             } // end if
@@ -510,16 +510,16 @@ class Minimizer {
                 if ((m>=prevIdx) && ((m%prevIdx)==0)) {
                     prevValue = vmc->m_accumulativeValues.energy;
                 } // end if
-//                     vmc->m_newDerivativeParameters.transpose() << "     " <<
-//                     vmc->wf->m_parameters.transpose() << "   " <<
 
                 // sample and minimize with specified method
                 (this->*minimizeFunction)();
 
+//                     vmc->m_newDerivativeParameters.norm() << "      " <<
                 std::cout << std::setprecision(14) <<
                     Methods::stringPos(vmc->m_rank+3, vmc->m_numprocs) <<
                     vmc->getAcceptance() << "       " <<
-                    vmc->m_newDerivativeParameters.norm() << "      " <<
+                    vmc->m_newDerivativeParameters.transpose() << "     " <<
+                    vmc->wf->m_parameters.transpose() << "   " <<
                     "    " << vmc->m_accumulativeValues.energy << "   " <<
                     (vmc->m_accumulativeValues.energySquared -
                      vmc->m_accumulativeValues.energy *
