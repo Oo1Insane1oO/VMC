@@ -312,10 +312,6 @@ template<class Sampler, class Wavefunction> double runSpecified(YAML::Node&
     Sampler* vmc = new Sampler(wf, inputs["stepmc"].as<double>(),
             initialParameters, inputs["maxitermc"].as<unsigned int>(), myRank,
             numProcs);
-    if (inputs["E0"]) {
-        /* set reference energy if given and minimize second momentum */
-        vmc->setReferenceEnergy(inputs["E0"].as<double>());
-    } // end if
 
     // minimize if parameters are not give
     findOptimalParameters<Sampler, Wavefunction>(inputs, vmc,

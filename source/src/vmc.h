@@ -32,36 +32,23 @@ class VMC {
 
         std::uniform_int_distribution<unsigned int> discreteDistribution;
 
-        double tmpPotentialEnergy, tmpKineticEnergy, tmpEnergy,
-               m_referenceEnergy;
+        double tmpPotentialEnergy, tmpKineticEnergy, tmpEnergy;
 
-        bool m_setVariationalDerivatives, m_findStep, m_setWithReferenceEnergy,
-             m_makeOnebodyDensities;
+        bool m_setVariationalDerivatives, m_findStep, m_makeOnebodyDensities;
 
-        void (VMC::*derivativeVariational)();
-
-        void derivativeWithReference() {
-            /* calculate derivative of second momentum */
-            m_newDerivativeParameters = 2. *
-                (m_accumulativeValues.psiDerivativeTimesEnergySquared -
-                 m_accumulativeValues.energySquared *
-                 m_accumulativeValues.psiDerivative - 2. *
-                 m_accumulativeValues.energy *
-                 (m_accumulativeValues.psiDerivativeTimesEnergy -
-                  m_accumulativeValues.energy *
-                  m_accumulativeValues.psiDerivative)) + 4. *
-                (m_accumulativeValues.energy - m_referenceEnergy) *
-                (m_accumulativeValues.psiDerivativeTimesEnergy -
-                 m_accumulativeValues.energy *
-                 m_accumulativeValues.psiDerivative);
-        } // end function derivativeWithReference
-
-        void derivativeEnergy() {
+        void derivativeVariational() {
             /* calculate derivative of expectation value */
             m_newDerivativeParameters = 2. *
                 (m_accumulativeValues.psiDerivativeTimesEnergy -
                  m_accumulativeValues.energy *
                  m_accumulativeValues.psiDerivative);
+// 
+//             m_newDerivativeParameters = 2. *
+//                 (m_accumulativeValues.psiDerivativeTimesEnergySquared +
+//                  m_accumulativeValues.psiDerivativeTimesEnergy -
+//                  (m_accumulativeValues.energySquared +
+//                   m_accumulativeValues.energy)  *
+//                  m_accumulativeValues.psiDerivative);
         } // end function derivativeEnergy
 
         void writeHistogramToFile() {
@@ -140,7 +127,6 @@ class VMC {
                 accumulateOnebodyDensities();
             } // end if
 
-
             // gather values for resampling
             if (rs) {
                 /* gather values for resampling if resampler object is given */
@@ -165,8 +151,6 @@ class VMC {
             m_findStep = false;
             m_hasSampleSetup = false;
             m_setVariationalDerivatives = false;
-            m_setWithReferenceEnergy = false;
-            derivativeVariational = &VMC::derivativeEnergy;
             stepMonteCarlo = step;
             sqrtStep = sqrt(stepMonteCarlo);
             numParticles = wf->getNumberOfParticles();
@@ -192,13 +176,6 @@ class VMC {
         } // end deconstructor
         
         T* wf;
-
-        void setReferenceEnergy(double referenceEnergy) {
-            /* set reference energy and minimize second momentum */
-            m_setWithReferenceEnergy = true;
-            m_referenceEnergy = referenceEnergy;
-            derivativeVariational = &VMC::derivativeWithReference;
-        } // end function setReferenceEnergy
 
         double sampler(const Eigen::VectorXd& parameters, const unsigned int
                 progressDivider=0) {
@@ -256,12 +233,7 @@ class VMC {
             m_accumulativeValues /= m_maxIterations;
 
             if (m_setVariationalDerivatives) {
-                /* set derivatives */
-                if (m_accumulativeValues.energy < m_referenceEnergy) {
-                    /* use actual derivative if overshooted for remaining */
-                    derivativeVariational = &VMC::derivativeEnergy;
-                } // end if
-                (this->*derivativeVariational)();
+                derivativeVariational();
             } // end if
 
             return m_accumulativeValues.energy;

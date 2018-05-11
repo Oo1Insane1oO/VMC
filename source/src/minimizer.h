@@ -514,12 +514,12 @@ class Minimizer {
                 // sample and minimize with specified method
                 (this->*minimizeFunction)();
 
-//                     vmc->m_newDerivativeParameters.norm() << "      " <<
+//                     vmc->m_newDerivativeParameters.transpose() << "     " <<
+//                     vmc->wf->m_parameters.transpose() << "   " <<
                 std::cout << std::setprecision(14) <<
                     Methods::stringPos(vmc->m_rank+3, vmc->m_numprocs) <<
                     vmc->getAcceptance() << "       " <<
-                    vmc->m_newDerivativeParameters.transpose() << "     " <<
-                    vmc->wf->m_parameters.transpose() << "   " <<
+                    vmc->m_newDerivativeParameters.norm() << "      " <<
                     "    " << vmc->m_accumulativeValues.energy << "   " <<
                     (vmc->m_accumulativeValues.energySquared -
                      vmc->m_accumulativeValues.energy *
