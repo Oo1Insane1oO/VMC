@@ -14,7 +14,8 @@ class Minimizer {
 
         double A, fmax, fmin, a, w, step, tol, maxStepASGD, prevValue, mu, eta,
                eps, exPol, delta, bestEnergy, bestVariance, maxValue,
-               oldEnergy, temp, tempStep, beta, astep, annealingFraction;
+               oldEnergy, temp, tempStep, beta, astep, annealingFraction,
+               threshAccept;
 
         struct ParamsMTLS {
             /* struct of default parameters for line search in CG */
@@ -40,6 +41,34 @@ class Minimizer {
 
         Eigen::MatrixXd hessianInverse, hessian;
 
+        bool FTSIP() {
+            /* Fuck-This-Sample-In-Particular. Check if sample fucked up(was
+             * unstable) and fuck it (straight up) if it did, aka find one of
+             * its neighbours (who hopefully isnt as shitty) and go for that
+             * one. If it didnt fuck up do nothing and calmly cheer for the
+             * sample and thank the fuck for it keeping it real. */
+            if ((vmc->getEnergy() < 0) ||
+                    (fabs(vmc->getNewDerivativeParameters().norm()) > 100) ||
+                    (vmc->getAcceptance() < threshAccept)) {
+                /* slightly shift and return false */
+                vmc->setParameters(vmc->m_oldParameters . 
+                unaryExpr([](double val) {
+                        static std::normal_distribution<double> nd(val, 1e-10);
+                        static std::mt19937_64 rng(std::stoi(std::to_string(
+                                        std::chrono::
+                                        high_resolution_clock::now() .
+                                        time_since_epoch() .
+                                        count()).substr(10)));
+                        return nd(rng);
+                    }));
+                vmc->sampler();
+                prevValue = vmc->m_accumulativeValues.energy;
+                return false;
+            } else {
+                return true;
+            } // end if
+        } // end function FTSIP
+
         void (Minimizer::*minimizeFunction)();
 
         void setParamsASGD() {
@@ -63,7 +92,7 @@ class Minimizer {
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 1.0;
+            pMTLS.aMax0 = 0.5;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -123,27 +152,36 @@ class Minimizer {
             
             // sample new values;
             vmc->sampler(vmc->m_oldParameters + step*searchDirection);
+            if (FTSIP()) {
+                /* make sure sample is good */
+                if (Methods::strongWolfeCondition(beta,
+                            vmc->m_newDerivativeParameters,
+                            vmc->m_oldDerivativeParameters, searchDirection)) {
+                    /* Make Stochastic-Adaptive step if Strong Wolfe-Conditions are
+                     * met */
+                    searchDirection = -vmc->m_oldDerivativeParameters;
+                    setSteps();
+                } else {
+                    /* Update Hessian and its inverse with BFGS */
+                    Methods::BFGSInverse<double>(hessianInverse,
+                            vmc->wf->m_parameters, vmc->m_oldParameters,
+                            vmc->m_newDerivativeParameters,
+                            vmc->m_oldDerivativeParameters);
+                    Methods::BFGS<double>(hessian, vmc->wf->m_parameters,
+                            vmc->m_oldParameters, vmc->m_newDerivativeParameters,
+                            vmc->m_oldDerivativeParameters);
+                } // end ifelse
 
-            if (Methods::strongWolfeCondition(beta,
-                        vmc->m_newDerivativeParameters,
-                        vmc->m_oldDerivativeParameters, searchDirection)) {
-                /* Make Stochastic-Adaptive step if Strong Wolfe-Conditions are
-                 * met */
-                searchDirection = -vmc->m_oldDerivativeParameters;
-                setSteps();
+                // update parameters
+                vmc->setParameters(vmc->m_oldParameters + step*searchDirection);
             } else {
-                /* Update Hessian and its inverse with BFGS */
-                Methods::BFGSInverse<double>(hessianInverse,
-                        vmc->wf->m_parameters, vmc->m_oldParameters,
-                        vmc->m_newDerivativeParameters,
-                        vmc->m_oldDerivativeParameters);
-                Methods::BFGS<double>(hessian, vmc->wf->m_parameters,
-                        vmc->m_oldParameters, vmc->m_newDerivativeParameters,
-                        vmc->m_oldDerivativeParameters);
-            } // end ifelse
-
-            // update parameters
-            vmc->setParameters(vmc->m_oldParameters + step*searchDirection);
+                /* reset hessians if sample is not good */
+                hessianInverse =
+                    Eigen::MatrixXd::Identity(hessianInverse.rows(),
+                            hessianInverse.cols());
+                hessian = Eigen::MatrixXd::Identity(hessian.rows(),
+                        hessian.cols());
+            } // endifelse
         } // end function minimizeSABFGS
 
         void minimizeBFGS() {
@@ -173,19 +211,29 @@ class Minimizer {
             } // end if
 
             // run linesearch
+            vmc->m_maxIterations /= 10;
             double s = MTLS::linesearchMoreThuente<>(&pMTLS, searchDirection,
                     vmc->m_oldParameters, vmc->m_accumulativeValues.energy,
                     vmc, static_cast<double(VMC<T>::*)(const Eigen::VectorXd&,
                         const unsigned int)>(&VMC<T>::sampler),
                     &VMC<T>::getNewDerivativeParameters, 0);
+            vmc->m_maxIterations *= 10;
 
             // sample with new parameter and set derivates and update hessian
             // (inverse) with Broyden-Fletcher-Goldfarb-Shanno method
             vmc->setParameters(vmc->m_oldParameters + s*searchDirection);
             vmc->sampler();
-            Methods::BFGSInverse<double>(hessianInverse, vmc->wf->m_parameters,
-                    vmc->m_oldParameters, vmc->m_newDerivativeParameters,
-                    vmc->m_oldDerivativeParameters);
+            if (FTSIP()) {
+                Methods::BFGSInverse<double>(hessianInverse,
+                        vmc->wf->m_parameters, vmc->m_oldParameters,
+                        vmc->m_newDerivativeParameters,
+                        vmc->m_oldDerivativeParameters);
+            } else {
+                /* start anew if we FTSIPed */
+                hessianInverse =
+                    Eigen::MatrixXd::Identity(hessianInverse.rows(),
+                            hessianInverse.cols());
+            } // end ifselse
         } // end function minimizeBFGS
 
         void minimizeCG() {
@@ -215,13 +263,16 @@ class Minimizer {
             // according to Polak-Ribiere method (forcing b to be such that the
             // search direction is always a descent direction)
             vmc->sampler();
-            double b =
-                Methods::max((vmc->m_newDerivativeParameters.squaredNorm() -
-                            vmc->m_newDerivativeParameters.transpose() *
-                            vmc->m_oldDerivativeParameters) /
-                        vmc->m_oldDerivativeParameters.squaredNorm(), 0.0);
-            searchDirection = b * searchDirection -
-                vmc->m_newDerivativeParameters;
+            if (FTSIP()) {
+                /* Only update is sample behaves */
+                double b =
+                    Methods::max((vmc->m_newDerivativeParameters.squaredNorm() -
+                                vmc->m_newDerivativeParameters.transpose() *
+                                vmc->m_oldDerivativeParameters) /
+                            vmc->m_oldDerivativeParameters.squaredNorm(), 0.0);
+                searchDirection = b * searchDirection -
+                    vmc->m_newDerivativeParameters;
+            } // end if
         } // end function minimizeCG
 
         void minimizeASGD() {
@@ -266,6 +317,7 @@ class Minimizer {
                         vmc->m_newDerivativeParameters.array() /
                         vmc->m_newDerivativeParameters.norm()).matrix());
             vmc->sampler();
+            FTSIP();
         } // end function minimizeASGD
 
         void minimizeSIAN() {
@@ -299,6 +351,10 @@ class Minimizer {
                         return nd(rng);
                     });
             double energy = vmc->sampler(newParameters);
+            if (!FTSIP()) {
+                /* dont bother with updating if sample is shit */
+                return;
+            } // end if
 
             // use Metropolis-Test to accept/reject state based on the gradient
             // ratio
@@ -496,11 +552,6 @@ class Minimizer {
                     showProgress(m);
                 } // end if
 
-                if (!currMethod.compare("SIAN")) {
-                    outfile << std::setprecision(14) << vmc->getEnergy() << ""
-                        " ";
-                }
-
                 // check current state of values and update accordingly
                 if (!updater(m)) {
                     break;
@@ -540,6 +591,11 @@ class Minimizer {
                 outfile.close();
             } // end if
         } // end function minimize
+
+        void setFunctionThresh(double thresh) {
+            /* set threshold for acceptance */
+            threshAccept = thresh;
+        } // end function setFunctionThresh
 
         const Eigen::VectorXd& getDerivative() const {
             /* return new derivative vector */

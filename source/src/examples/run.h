@@ -106,6 +106,14 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                 inputs["minimization"][0].as<std::string>().c_str(),
                 inputs["minimization"][1].as<unsigned int>(),
                 inputs["minimization"][2].as<double>());
+
+        if (inputs["importance"].as<bool>()) {
+            /* make sure acceptance is at all times high */
+            minimizer->setFunctionThresh(0.97);
+        } else {
+            /* make sure acceptance is at all times acceptable */
+            minimizer->setFunctionThresh(0.5);
+        } // end ifselse
     } // end if
 
     // find initial parameters
@@ -151,7 +159,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                                         now().time_since_epoch().count()) .
                                     substr(10)));
                         static std::uniform_real_distribution<double>
-                            nd(1.2,2.1);
+                            nd(0.9,1.7);
                         return nd(rng);
                     });
         } // end if

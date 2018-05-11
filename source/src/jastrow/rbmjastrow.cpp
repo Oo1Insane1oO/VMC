@@ -119,7 +119,8 @@ double RBMJastrow::jastrowWavefunctionRatio() {
         oldBiasSum += (SJ->getOldPosition(i).transpose() -
                 visibleVec).squaredNorm();
     } // end fori
-   
+  
+    // add 1 to each element in expSumVector (both of them) then take product
     return exp((oldBiasSum - newBiasSum)/2.) *
         (m_expSumVector.array()+1).prod() /
         (m_oldExpSumVector.array()+1).prod();
@@ -134,6 +135,7 @@ double RBMJastrow::jastrowWavefunctionRatio(const unsigned int& p) {
     double oldBiasSum = (SJ->getOldPosition(p).transpose() -
             visibleVec).squaredNorm();
    
+    // add 1 to each element in expSumVector (both of them) then take product
     return exp((oldBiasSum - newBiasSum)/2.) *
         (m_expSumVector.array()+1).prod() /
         (m_oldExpSumVector.array()+1).prod();
