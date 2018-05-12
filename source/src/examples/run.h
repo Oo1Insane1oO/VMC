@@ -132,7 +132,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::high_resolution_clock::now().
                                         time_since_epoch().count()).substr(10)));
-                        static std::normal_distribution<double> nd(0.0,0.001);
+                        static std::normal_distribution<double> nd(0.0,1.0);
                         return nd(rng);
                     });
             } else { 
@@ -159,7 +159,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                                         now().time_since_epoch().count()) .
                                     substr(10)));
                         static std::uniform_real_distribution<double>
-                            nd(0.9,1.7);
+                            nd(0.4,1.7);
                         return nd(rng);
                     });
         } // end if

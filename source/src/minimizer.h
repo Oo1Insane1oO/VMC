@@ -49,11 +49,13 @@ class Minimizer {
              * sample and thank the fuck for it keeping it real. */
             if ((vmc->getEnergy() < 0) ||
                     (fabs(vmc->getNewDerivativeParameters().norm()) > 100) ||
-                    (vmc->getAcceptance() < threshAccept)) {
+                    (vmc->getAcceptance() < threshAccept) ||
+                    ((vmc->getEnergySquared() - vmc->getEnergy() *
+                      vmc->getEnergy()) / vmc->m_maxIterations > 1e-3)) {
                 /* slightly shift and return false */
                 vmc->setParameters(vmc->m_oldParameters . 
                 unaryExpr([](double val) {
-                        static std::normal_distribution<double> nd(val, 1e-10);
+                        static std::normal_distribution<double> nd(val, 1e-5);
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::
                                         high_resolution_clock::now() .
@@ -87,12 +89,12 @@ class Minimizer {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
             pMTLS.mu = 0.001;
-            pMTLS.eta = 0.6;
+            pMTLS.eta = 0.1;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 0.5;
+            pMTLS.aMax0 = 1.0;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -211,13 +213,11 @@ class Minimizer {
             } // end if
 
             // run linesearch
-            vmc->m_maxIterations /= 10;
             double s = MTLS::linesearchMoreThuente<>(&pMTLS, searchDirection,
                     vmc->m_oldParameters, vmc->m_accumulativeValues.energy,
                     vmc, static_cast<double(VMC<T>::*)(const Eigen::VectorXd&,
                         const unsigned int)>(&VMC<T>::sampler),
                     &VMC<T>::getNewDerivativeParameters, 0);
-            vmc->m_maxIterations *= 10;
 
             // sample with new parameter and set derivates and update hessian
             // (inverse) with Broyden-Fletcher-Goldfarb-Shanno method
@@ -500,7 +500,7 @@ class Minimizer {
 //             minimizeFunction = &Minimizer::minimizeSABFGS;
             currMethod = "SIAN";
             minimizeFunction = &Minimizer::minimizeSIAN;
-            annealingFraction = 0.0;
+            annealingFraction = 0.00;
 
             // set function pointer to specific minimize method
             if (!minimizationMethod.compare("SD")) {
