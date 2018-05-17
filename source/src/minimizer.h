@@ -51,11 +51,11 @@ class Minimizer {
                     (fabs(vmc->getNewDerivativeParameters().norm()) > 100) ||
                     (vmc->getAcceptance() < threshAccept) ||
                     ((vmc->getEnergySquared() - vmc->getEnergy() *
-                      vmc->getEnergy()) / vmc->m_maxIterations > 1e-3)) {
+                      vmc->getEnergy()) / vmc->m_maxIterations > 1e-2)) {
                 /* slightly shift and return false */
                 vmc->setParameters(vmc->m_oldParameters . 
                 unaryExpr([](double val) {
-                        static std::normal_distribution<double> nd(val, 1e-5);
+                        std::normal_distribution<double> nd(val, 1e-4);
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::
                                         high_resolution_clock::now() .
@@ -342,7 +342,7 @@ class Minimizer {
             Eigen::ArrayXd newParameters =
                 Eigen::ArrayXd::Zero(vmc->wf->m_parameters.size()) .
                 unaryExpr([](double val) {
-                        static std::normal_distribution<double> nd(val, 0.1);
+                        static std::normal_distribution<double> nd(val, 1.0);
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::
                                         high_resolution_clock::now() .
@@ -500,7 +500,7 @@ class Minimizer {
 //             minimizeFunction = &Minimizer::minimizeSABFGS;
             currMethod = "SIAN";
             minimizeFunction = &Minimizer::minimizeSIAN;
-            annealingFraction = 0.00;
+            annealingFraction = 0.1;
 
             // set function pointer to specific minimize method
             if (!minimizationMethod.compare("SD")) {
@@ -566,12 +566,12 @@ class Minimizer {
                 (this->*minimizeFunction)();
 
 //                     vmc->m_newDerivativeParameters.transpose() << "     " <<
-//                     vmc->wf->m_parameters.transpose() << "   " <<
                 std::cout << std::setprecision(14) <<
                     Methods::stringPos(vmc->m_rank+3, vmc->m_numprocs) <<
-                    vmc->getAcceptance() << "       " <<
-                    vmc->m_newDerivativeParameters.norm() << "      " <<
-                    "    " << vmc->m_accumulativeValues.energy << "   " <<
+                    vmc->getAcceptance() << "       \n" <<
+//                     vmc->m_newDerivativeParameters.norm() << "      " <<
+                    vmc->wf->m_parameters << "   " <<
+                    "\n    " << vmc->m_accumulativeValues.energy << "   " <<
                     (vmc->m_accumulativeValues.energySquared -
                      vmc->m_accumulativeValues.energy *
                      vmc->m_accumulativeValues.energy) / vmc->m_maxIterations

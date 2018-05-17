@@ -109,7 +109,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
 
         if (inputs["importance"].as<bool>()) {
             /* make sure acceptance is at all times high */
-            minimizer->setFunctionThresh(0.97);
+            minimizer->setFunctionThresh(0.96);
         } else {
             /* make sure acceptance is at all times acceptable */
             minimizer->setFunctionThresh(0.5);
