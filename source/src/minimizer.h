@@ -89,7 +89,7 @@ class Minimizer {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
             pMTLS.mu = 0.001;
-            pMTLS.eta = 0.1;
+            pMTLS.eta = 0.6;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
@@ -526,6 +526,11 @@ class Minimizer {
         virtual ~Minimizer () {
         } // end deconstructor
 
+        void setAnnealingFraction(double a) {
+            /* set the fraction at which annealing should proceed */
+            annealingFraction = a;
+        } // end function setAnnealingFraction
+
         void minimize(bool showBar=true) {
             /* sample and find optimal parameters */
             
@@ -566,12 +571,12 @@ class Minimizer {
                 (this->*minimizeFunction)();
 
 //                     vmc->m_newDerivativeParameters.transpose() << "     " <<
+//                     vmc->wf->m_parameters << "   " <<
                 std::cout << std::setprecision(14) <<
                     Methods::stringPos(vmc->m_rank+3, vmc->m_numprocs) <<
-                    vmc->getAcceptance() << "       \n" <<
-//                     vmc->m_newDerivativeParameters.norm() << "      " <<
-                    vmc->wf->m_parameters << "   " <<
-                    "\n    " << vmc->m_accumulativeValues.energy << "   " <<
+                    vmc->getAcceptance() << "       " <<
+                    vmc->m_newDerivativeParameters.norm() << "      " <<
+                    "    " << vmc->m_accumulativeValues.energy << "   " <<
                     (vmc->m_accumulativeValues.energySquared -
                      vmc->m_accumulativeValues.energy *
                      vmc->m_accumulativeValues.energy) / vmc->m_maxIterations

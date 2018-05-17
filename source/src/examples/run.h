@@ -163,6 +163,9 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                         return nd(rng);
                     });
         } // end if
+    } else {
+        /* Dont do annealing if parameters are given */
+        minimizer->setAnnealingFraction(0.0);
     } // end if
 
     vmc->setParameters(initialParameters);
