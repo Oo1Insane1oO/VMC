@@ -61,7 +61,7 @@ void HartreeFock::initializeParameters(const double& w, const unsigned int& L,
 
     m_numBasis = L;
 
-    m_C = coefficientMatrix;
+    m_C = coefficientMatrix.sparseView(1e-13);
 
    // initialize basis (wrapper)
     HartreeFockBasis::setup(2*L, slater->m_dim);
@@ -224,11 +224,10 @@ double HartreeFock::calculateWavefunction(const unsigned int& p, const unsigned
     /* calculate and return new wavefunction for particle p in state j */
     /* fill in */
     double res = 0.0;
-    for (unsigned int l = 0; l < m_numBasis; ++l) {
-        const double& mc = m_C(l,j);
-        double lprod = mc;
+    for (Eigen::SparseMatrix<double>::InnerIterator lIt(m_C, j); lIt; ++lIt) {
+        double lprod = lIt.value();
         for (unsigned int d = 0; d < slater->m_dim; ++d) {
-            const int& n = HartreeFockBasis::getn(l,d);
+            const int& n = HartreeFockBasis::getn(lIt.row(),d);
             lprod *= m_hermite3DMatrix(p,d)(n) * m_hermiteNormalizations(n);
         } // end ford
         res += lprod;
@@ -236,38 +235,37 @@ double HartreeFock::calculateWavefunction(const unsigned int& p, const unsigned
     return res * exp(-0.5*m_SnewPositions.row(p).squaredNorm());
 } // end function calculateWavefunction
 
-double HartreeFock::gradientExpression(const unsigned int& p, const int& j, const
-        unsigned int& d) {
+double HartreeFock::gradientExpression(const unsigned int& p, const int& j,
+        const unsigned int& d) {
     /* calculate gradient expression */
     /* fill in */
     double res = 0.0;
-    for (unsigned int l = 0; l < m_numBasis; ++l) {
-        const double& mc = m_C(l,j);
-        const int& nd = HartreeFockBasis::getn(l,d);
+    for (Eigen::SparseMatrix<double>::InnerIterator lIt(m_C, j); lIt; ++lIt) {
+        const int& nd = HartreeFockBasis::getn(lIt.row(),d);
         if(nd==0) {
-            res -= mc * slater->getNewPosition(p,d) *
-                m_SWavefunctionMatrix(p,l);
+            res -= lIt.value() * slater->getNewPosition(p,d) *
+                m_SWavefunctionMatrix(p,lIt.row());
         } else {
-            res += mc * (2*nd * m_hermite3DMatrix(p,d)(nd-1) /
+            res += lIt.value() * (2*nd * m_hermite3DMatrix(p,d)(nd-1) /
                     m_hermite3DMatrix(p,d)(nd) - slater->getNewPosition(p,d)) *
-                m_SWavefunctionMatrix(p,l);
+                m_SWavefunctionMatrix(p,lIt.row());
         } // end ifelse
     } // end forl
     return res * sqrtOmega;
 } // end function calculateGradient
 
-const Eigen::VectorXd& HartreeFock::laplacianExpression(const unsigned int& i, const
-        unsigned int& idx) {
+const Eigen::VectorXd& HartreeFock::laplacianExpression(const unsigned int& i,
+        const unsigned int& idx) {
     /* calculate and return expression involved in the laplacian */
     /* fill in */
     m_laplacianSumVec.setZero();
     double rlen = m_SnewPositions.row(i).squaredNorm() - slater->m_dim;
     for (unsigned int j = 0; j < idx; ++j) {
-        for (unsigned int l = 0; l < m_numBasis; ++l) {
-            const double& mc = m_C(l,j);
+        for (Eigen::SparseMatrix<double>::InnerIterator lIt(m_C, j); lIt;
+                ++lIt) {
             double lsum = rlen;
             for (unsigned int d = 0; d < slater->m_dim; ++d) {
-                const int& n = HartreeFockBasis::getn(l,d);
+                const int& n = HartreeFockBasis::getn(lIt.row(),d);
                 if (n==0) {
                     continue;
                 } else  if (n==1) {
@@ -279,7 +277,8 @@ const Eigen::VectorXd& HartreeFock::laplacianExpression(const unsigned int& i, c
                          m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1));
                 } // end if
             } // end ford
-            m_laplacianSumVec(j) += mc * lsum * m_SWavefunctionMatrix(i,l);
+            m_laplacianSumVec(j) += lIt.value() * lsum *
+                m_SWavefunctionMatrix(i,lIt.row());
         } // end forl
     } // end forj
     m_laplacianSumVec *= omega;

@@ -7,6 +7,7 @@
 #include "../basis/hartreefockbasis.h"
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 class Slater;
 
@@ -24,7 +25,7 @@ class HartreeFock : public HartreeFockBasis {
 
         Slater* slater;
         
-        Eigen::MatrixXd m_C;
+        Eigen::SparseMatrix<double> m_C;
         Eigen::ArrayXd m_hermiteNormalizations;
         
         Eigen::Matrix<Eigen::VectorXd, Eigen::Dynamic, Eigen::Dynamic>
