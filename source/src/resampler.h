@@ -10,6 +10,7 @@ class Resampler {
     private:
         void bootStrap(unsigned int);
         void blocking(unsigned int);
+        void autoBlocking(unsigned int);
 
         void (Resampler::*resamplingFunction)(unsigned int);
 
