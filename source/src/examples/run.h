@@ -159,7 +159,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                                         now().time_since_epoch().count()) .
                                     substr(10)));
                         static std::uniform_real_distribution<double>
-                            nd(0.4,1.7);
+                            nd(0.9,1.7);
                         return nd(rng);
                     });
         } // end if

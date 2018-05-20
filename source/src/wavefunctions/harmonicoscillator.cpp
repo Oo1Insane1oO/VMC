@@ -74,7 +74,7 @@ double Quantumdot::variationalDerivativeExpression(const unsigned int& i, const
             continue;
         } // end if
         sum += n/slater->m_parameters(l) * m_SnewPositions(i,d) *
-            m_hermite3DMatrix(i,n-1)(d) / m_hermite3DMatrix(i,n)(d);
+            m_hermite3DMatrix(i,d)(n-1) / m_hermite3DMatrix(i,d)(n);
     } // end ford
     return sum * slater->getWavefunction(i,j);
 } // end function variationalDerivativeExpression
