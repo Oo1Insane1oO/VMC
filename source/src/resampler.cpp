@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <iostream>
+#include <array>
 
 #include "methods.h"
 
@@ -147,43 +148,47 @@ void Resampler::autoBlocking(unsigned int i) {
     Eigen::ArrayXd ev = Eigen::ArrayXd::Zero(newSize);
     Eigen::ArrayXd od = Eigen::ArrayXd::Zero(newSize);
     for (unsigned int i = 0; i < d; ++i) {
-        gamma(i) = 1./newSize * ((newx.segment(0,newSize-1) - mu) *
-                (newx.segment(1,newSize-1) - mu)).sum();
+        int nm1 = newSize - 1;
+        gamma(i) = 1./newSize * ((newx.segment(0,nm1) - mu) *
+                (newx.segment(1,nm1) - mu)).sum();
 
         s(i) = Methods::var<double>(newx);
-        newSize /= 2;
-        for (unsigned int k = 0, l=1; k < newSize, l<newSize; k+=2, l+=2) {
-            ev(k) = newx(k);
-            od(l) = newx(l);
+
+        for (unsigned int k = 0, l=0; k < newSize; k+=2, ++l) {
+            od(l) = newx(k+1);
+            ev(l) = newx(k);
         } // end fork
+        newSize /= 2;
         newx.head(newSize) = 0.5 * (ev.head(newSize) + od.head(newSize));
     } // end fori
 
-    Eigen::ArrayXd drange = Eigen::ArrayXd::Zero(d);
-    for (unsigned int k = 1; k < d+1; ++k) {
-        drange(k-1) = k;
-    } // end fork
-    drange *= (pow(gamma/s,2) * drange.pow(2).reverse()).reverse();
-
     Eigen::ArrayXd M = Eigen::ArrayXd::Zero(d);
-    for (unsigned int k = 1; k < d; ++k) {
-        M(k-1) = drange[k-1] + drange[k];
+    for (unsigned int k = 0; k < d; ++k) {
+        M(k) = pow(2,k+1);
+    } // end fork
+    M *= ((gamma/s).pow(2) * M.reverse()).reverse();
+
+    // cumulative sum
+    for (unsigned int k = 0; k < d; ++k) {
+        M(k) = M.head(k).sum();
     } // end fork
     M = M.reverse();
 
-    static Eigen::Array<double, 30, 1> q;
-    q << 6.634897,9.210340, 11.344867, 13.276704, 15.086272, 16.811894,
-      18.475307, 20.090235, 21.665994, 23.209251, 24.724970, 26.216967,
-      27.688250, 29.141238, 30.577914, 31.999927, 33.408664, 34.805306,
-      36.190869, 37.566235, 38.932173, 40.289360, 41.638398, 42.979820,
-      44.314105, 45.641683, 46.962942, 48.278236, 49.587884, 50.892181;
+    static constexpr std::array<double, 30> q{
+        6.634897, 9.210340, 11.344867, 13.276704, 15.086272, 16.811894,
+        18.475307, 20.090235, 21.665994, 23.209251, 24.724970, 26.216967,
+        27.688250, 29.141238, 30.577914, 31.999927, 33.408664, 34.805306,
+        36.190869, 37.566235, 38.932173, 40.289360, 41.638398, 42.979820,
+        44.314105, 45.641683, 46.962942, 48.278236, 49.587884, 50.892181
+    };
 
     unsigned int k = 0;
     for (k = 0; k < d; ++k) {
-        if (M(k) < q(k)) {
+        if (M(k) < q[k]) {
             break;
         } // end if
     } // end fork
+
     if (k >= (d-1)) {
         // FIXME: MAKE ERROR
     } // end if
