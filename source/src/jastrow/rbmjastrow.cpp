@@ -163,13 +163,14 @@ double RBMJastrow::derivativeWeight(const unsigned int& l) {
 
 const Eigen::VectorXd& RBMJastrow::gradient(const unsigned int& p) {
     /* calculate and return gradient for particle p */
-    m_jastrowGradientVector = - (SJ->getNewPosition(p).transpose() -
-            SJ->m_parameters.segment(m_parametersDispl+p*SJ->m_dim,
-                SJ->m_dim));
+    m_jastrowGradientVector =
+        SJ->m_parameters.segment(m_parametersDispl+p*SJ->m_dim, SJ->m_dim) -
+        SJ->getNewPosition(p).transpose();
     for (unsigned int j = 0; j < m_numHiddenBias; ++j) {
+        double jfactor = 1. / (1 + 1./m_expSumVector(j));
         for (unsigned int d = 0; d < SJ->m_dim; ++d) {
             m_jastrowGradientVector(d) += SJ->m_parameters(m_weightsDispl +
-                    wi(p,j,d)) / (1 + 1./m_expSumVector(j));
+                    wi(p,j,d)) * jfactor; 
         } // end ford
     } // end forj
     return m_jastrowGradientVector;
@@ -179,10 +180,9 @@ double RBMJastrow::jastrowLaplacian() {
     /* calculate and return Laplacian of Jastrow factor */
     double res = 0.0;
     for (unsigned int k = 0; k < SJ->m_numParticles; ++k) {
-        res += (SJ->getNewPosition(k).transpose() -
-                SJ->m_parameters.segment(m_parametersDispl+k*SJ->m_dim,
-                    SJ->m_dim)).squaredNorm() - SJ->m_dim;
-        m_jastrowGradientVector.setZero();
+        m_jastrowGradientVector =
+            SJ->m_parameters.segment(m_parametersDispl+k*SJ->m_dim, SJ->m_dim)
+            - SJ->getNewPosition(k).transpose();
         for (unsigned int j = 0; j < m_numHiddenBias; ++j) {
             double expSum = m_expSumVector(j); 
             double expSum1 = 1. / (1 + expSum);
@@ -190,13 +190,12 @@ double RBMJastrow::jastrowLaplacian() {
             for (unsigned int d = 0; d < SJ->m_dim; ++d) {
                 const double& wkj = SJ->m_parameters(m_weightsDispl +
                         wi(k,j,d));
-                res += -2*wkj * (SJ->getNewPosition(k,d) -
-                        SJ->m_parameters(m_parametersDispl+k*SJ->m_dim + d)) *
-                    expSum1Neg + wkj*wkj * expSum * expSum1*expSum1;
+                res += wkj*wkj * expSum * expSum1*expSum1;
                 m_jastrowGradientVector(d) += wkj * expSum1Neg;
             } // end ford
         } // end forj
-        res += m_jastrowGradientVector.squaredNorm();
+        res += m_jastrowGradientVector.squaredNorm() - SJ->m_dim;
+            
     } // end fork
 
     return res;

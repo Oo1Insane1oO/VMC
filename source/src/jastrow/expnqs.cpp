@@ -69,11 +69,12 @@ const Eigen::VectorXd& ExpNQS::jastrowGradientExpression(const unsigned
 
 double ExpNQS::jastrowLaplacian() {
     /* calculate Laplacian */
+    static double dimm1 = SJ->m_dim - 1;
     double res = RBMJastrow::jastrowLaplacian();
     double resExp = 0.0;
     for (unsigned int i = 0; i < SJ->m_numParticles; ++i) {
         for (unsigned int j = i+1; j < SJ->m_numParticles; ++j) {
-            resExp += PadeJastrow::spinFactor(i,j) * (SJ->m_dim - 1) /
+            resExp += PadeJastrow::spinFactor(i,j) * dimm1 /
                 SJ->getNewDistance(i,j);
         } // end forj
     } // end fori
@@ -96,11 +97,11 @@ void ExpNQS::calculateGradient() {
     for (unsigned int i = 0; i < SJ->m_numParticles; ++i) {
         for (unsigned int j = i+1; j < SJ->m_numParticles; ++j) {
             m_jastrowGradient3DMatrix(i,j) = jastrowGradientExpression(i,j);
-            m_jastrowGradient3DMatrix(j,i) = - m_jastrowGradient3DMatrix(i,j);
+            m_jastrowGradient3DMatrix(j,i) = -m_jastrowGradient3DMatrix(i,j); 
         } // end forj
         for (unsigned int j = 0; j < i; ++j) {
             m_jastrowGradient3DMatrix(i,j) = jastrowGradientExpression(i,j);
-            m_jastrowGradient3DMatrix(j,i) = - m_jastrowGradient3DMatrix(i,j);
+            m_jastrowGradient3DMatrix(j,i) = -m_jastrowGradient3DMatrix(i,j); 
         } // end forj
     } // end fori
     m_oldJastrowGradient3DMatrix = m_jastrowGradient3DMatrix;
@@ -115,12 +116,12 @@ void ExpNQS::calculateGradient(const unsigned int& p) {
     
     for (unsigned int j = p+1; j < SJ->m_numParticles; ++j) {
         m_jastrowGradient3DMatrix(p,j) = jastrowGradientExpression(p,j);
-        m_jastrowGradient3DMatrix(j,p) = - m_jastrowGradient3DMatrix(p,j);
+        m_jastrowGradient3DMatrix(j,p) = -m_jastrowGradient3DMatrix(p,j); 
     } // end forj
     
     for (unsigned int j = 0; j < p; ++j) {
         m_jastrowGradient3DMatrix(p,j) = jastrowGradientExpression(p,j);
-        m_jastrowGradient3DMatrix(j,p) = - m_jastrowGradient3DMatrix(p,j);
+        m_jastrowGradient3DMatrix(j,p) = -m_jastrowGradient3DMatrix(p,j); 
     } // end forj
 
     RBMJastrow::calculateGradient(p);

@@ -48,10 +48,10 @@ class Minimizer {
              * one. If it didnt fuck up do nothing and calmly cheer for the
              * sample and thank the fuck for it keeping it real. */
             if ((vmc->getEnergy() < 0) ||
-                    (fabs(vmc->getNewDerivativeParameters().norm()) > 100) ||
+                    (fabs(vmc->getNewDerivativeParameters().norm()) > 1000) ||
                     (vmc->getAcceptance() < threshAccept) ||
-                    ((vmc->getEnergySquared() - vmc->getEnergy() *
-                      vmc->getEnergy()) / vmc->m_maxIterations > 1e-2)) {
+                    (sqrt((vmc->getEnergySquared() - vmc->getEnergy() *
+                           vmc->getEnergy()) / vmc->m_maxIterations > 1.0))) {
                 /* slightly shift and return false */
                 vmc->setParameters(vmc->m_oldParameters . 
                 unaryExpr([](double val) {
@@ -64,7 +64,6 @@ class Minimizer {
                         return nd(rng);
                     }));
                 vmc->sampler();
-                prevValue = vmc->m_accumulativeValues.energy;
                 return false;
             } else {
                 return true;
@@ -89,7 +88,7 @@ class Minimizer {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
             pMTLS.mu = 0.001;
-            pMTLS.eta = 0.6;
+            pMTLS.eta = 0.4;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
@@ -571,7 +570,7 @@ class Minimizer {
                 (this->*minimizeFunction)();
 
 //                     vmc->m_newDerivativeParameters.transpose() << "     " <<
-//                     vmc->wf->m_parameters << "   " <<
+//                     vmc->wf->m_parameters.transpose() << "   " <<
                 std::cout << std::setprecision(14) <<
                     Methods::stringPos(vmc->m_rank+3, vmc->m_numprocs) <<
                     vmc->getAcceptance() << "       " <<

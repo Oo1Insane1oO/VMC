@@ -132,7 +132,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::high_resolution_clock::now().
                                         time_since_epoch().count()).substr(10)));
-                        static std::normal_distribution<double> nd(0.0,1.0);
+                        std::normal_distribution<double> nd(0.0,0.01);
                         return nd(rng);
                     });
             } else { 
@@ -158,8 +158,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                                         std::chrono::high_resolution_clock ::
                                         now().time_since_epoch().count()) .
                                     substr(10)));
-                        static std::uniform_real_distribution<double>
-                            nd(0.9,1.7);
+                        std::uniform_real_distribution<double> nd(0.9,1.7);
                         return nd(rng);
                     });
         } // end if
@@ -175,6 +174,8 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
     // find optimal parameters
     if (minimizer != NULL) {
         minimizer->minimize(inputs["progress"].as<bool>());
+    } else {
+        return;
     } // end if
 
     // let root gather parameters, average them and redistribute
@@ -189,11 +190,8 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
     MPI_Gather(vmc->getParameters().data(), numVariationalParameters,
             MPI_DOUBLE, parametersBuffer.data(), numVariationalParameters,
             MPI_DOUBLE, 0, MPI_COMM_WORLD);
-//     MPI_Reduce(vmc->getParameters().data(), initialParameters.data(),
-//             initialParameters.size(), MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     #endif
     if (myRank == 0) {
-//         initialParameters /= numProcs;
         /* choose parameters which give lowest(stable) energy */
         for (unsigned int p = 0; p < numProcs; ++p) {
             if (acceptances(p) < 0.3) {
@@ -202,8 +200,6 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
         } // end forp
         vmc->setParameters(parametersBuffer.row(Methods::argMin(energies)));
     } // end if
-//     MPI_Allreduce(vmc->getParameters().data(), initialParameters.data(),
-//             initialParameters.size(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     // clear memory
     delete minimizer;
