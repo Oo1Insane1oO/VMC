@@ -14,8 +14,8 @@ class Minimizer {
 
         double A, fmax, fmin, a, w, step, tol, maxStepASGD, prevValue, mu, eta,
                eps, exPol, delta, bestEnergy, bestVariance, maxValue,
-               oldEnergy, temp, tempStep, beta, astep, annealingFraction,
-               threshAccept;
+               oldEnergy, temp, beta, astep, annealingFraction, threshAccept,
+               tempMax;
 
         struct ParamsMTLS {
             /* struct of default parameters for line search in CG */
@@ -29,7 +29,7 @@ class Minimizer {
             double aMax0;
         } pMTLS; // end struct p1
 
-        unsigned int m_runMax, maxIterationsLinesearch, prevIdx;
+        unsigned int m_runMax, maxIterationsLinesearch, prevIdx, sianIdx;
 
         bool hasSetup;
 
@@ -331,8 +331,9 @@ class Minimizer {
                         bestEnergy*bestEnergy) / vmc->m_maxIterations;
                 oldEnergy = vmc->getEnergy();
                 maxValue = 10.;
-                temp = 1.0;
-                tempStep = temp/(m_runMax*annealingFraction);
+                tempMax = 100.;
+                temp = tempMax;
+                sianIdx = 1;
 
                 hasSetup = true;
             } // end if
@@ -380,7 +381,8 @@ class Minimizer {
                     vmc->m_oldDerivativeParameters;
             } // end if
 
-            temp -= tempStep;
+            temp = tempMax/sianIdx;
+            sianIdx++;
         } // end function minimizeSian
 
         void setup() {
