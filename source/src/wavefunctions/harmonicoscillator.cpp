@@ -74,7 +74,9 @@ double Quantumdot::variationalDerivativeExpression(const unsigned int& i, const
             continue;
         } // end if
         sum += n/slater->m_parameters(l) * m_SnewPositions(i,d) *
-            m_hermite3DMatrix(i,d)(n-1) / m_hermite3DMatrix(i,d)(n);
+            H(m_SnewPositions(i,d), n-1) / H(m_SnewPositions(i,d),n);
+//         sum += n/slater->m_parameters(l) * m_SnewPositions(i,d) *
+//             m_hermite3DMatrix(i,d)(n-1) / m_hermite3DMatrix(i,d)(n);
     } // end ford
     return sum * slater->getWavefunction(i,j);
 } // end function variationalDerivativeExpression
@@ -83,7 +85,7 @@ void Quantumdot::setHermite3DMatrix(const unsigned int& p) {
     for (unsigned int d = 0; d < slater->m_dim; ++d) {
         for (unsigned int j = 0; j < QuantumdotBasis::Cartesian::getn().size();
                 ++j) {
-            m_hermite3DMatrix(p,d)(j) = H(m_SnewPositions(p,d), j);
+//             m_hermite3DMatrix(p,d)(j) = H(m_SnewPositions(p,d), j);
         } // end ford
     } // end forj
 } // end function setHermite3DMatrix
@@ -93,11 +95,11 @@ void Quantumdot::set(const Eigen::MatrixXd& newPositions) {
     m_SnewPositions = sqaw * newPositions;
     m_SoldPositions = m_SnewPositions;
 
-    for (unsigned int i = 0; i < slater->getNumberOfParticles(); ++i) {
-        setHermite3DMatrix(i);
-    } // end fori
-
-    m_oldHermite3DMatrix = m_hermite3DMatrix;
+//     for (unsigned int i = 0; i < slater->getNumberOfParticles(); ++i) {
+//         setHermite3DMatrix(i);
+//     } // end fori
+// 
+//     m_oldHermite3DMatrix = m_hermite3DMatrix;
 } // end function set;
 
 std::string Quantumdot::setupDone() {
@@ -150,15 +152,15 @@ void Quantumdot::update(const Eigen::VectorXd& newPosition, const unsigned int&
     m_SoldPositions.row(p) = m_SnewPositions.row(p);
     m_SnewPositions.row(p) = sqaw * slater->getNewPosition(p);
 
-    m_oldHermite3DMatrix.row(p) = m_hermite3DMatrix.row(p);
-    setHermite3DMatrix(p);
+//     m_oldHermite3DMatrix.row(p) = m_hermite3DMatrix.row(p);
+//     setHermite3DMatrix(p);
 } // end function update
 
 void Quantumdot::reset(const unsigned int& p) {
     /* set new position and wavefunction to old values for particle p */
     m_SnewPositions.row(p) = m_SoldPositions.row(p);
 
-    m_hermite3DMatrix.row(p) = m_oldHermite3DMatrix.row(p);
+//     m_hermite3DMatrix.row(p) = m_oldHermite3DMatrix.row(p);
 } // end function reset
 
 void Quantumdot::acceptState(const unsigned int& p) {
@@ -166,7 +168,7 @@ void Quantumdot::acceptState(const unsigned int& p) {
      * p */
     m_SoldPositions.row(p) =  m_SnewPositions.row(p);
 
-    m_oldHermite3DMatrix.row(p) = m_hermite3DMatrix.row(p);
+//     m_oldHermite3DMatrix.row(p) = m_hermite3DMatrix.row(p);
 } // end function acceptState
 
 double Quantumdot::calculateWavefunction(const unsigned int& p, const unsigned
@@ -174,7 +176,8 @@ double Quantumdot::calculateWavefunction(const unsigned int& p, const unsigned
     /* calculate and return new wavefunction for particle p in state j */
     double res = exp(-0.5*m_SnewPositions.row(p).squaredNorm());
     for (unsigned int d = 0; d < slater->m_dim; ++d) {
-        res *= m_hermite3DMatrix(p,d)(QuantumdotBasis::getn(j,d));
+//         res *= m_hermite3DMatrix(p,d)(QuantumdotBasis::getn(j,d));
+        res *= H(m_SnewPositions(p,d),QuantumdotBasis::getn(j,d));
     } // end ford
     return res;
 } // end function calculateWavefunction
@@ -187,7 +190,9 @@ double Quantumdot::gradientExpression(const unsigned int& p, const int& j,
         return - sqaw * slater->getNewPosition(p,d) *
             slater->getWavefunction(p,j);
     } // end if
-    return sqaw*(2*n*m_hermite3DMatrix(p,d)(n-1) / m_hermite3DMatrix(p,d)(n) -
+//     return sqaw*(2*n*m_hermite3DMatrix(p,d)(n-1) / m_hermite3DMatrix(p,d)(n) -
+//             slater->getNewPosition(p,d)) * slater->getWavefunction(p,j);
+    return sqaw*(2*n*H(m_SnewPositions(p,d), n-1) / H(m_SnewPositions(p,d),n) -
             slater->getNewPosition(p,d)) * slater->getWavefunction(p,j);
 } // end function calculateGradient
 
@@ -202,12 +207,17 @@ const Eigen::VectorXd& Quantumdot::laplacianExpression(const unsigned int& i,
             if (n==0) {
                 continue;
             } else if (n==1) {
-                m_laplacianSumVec(j) -= 4*n/m_hermite3DMatrix(i,d)(n) *
-                    m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1);
+//                 m_laplacianSumVec(j) -= 4*n/m_hermite3DMatrix(i,d)(n) *
+//                     m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1);
+                m_laplacianSumVec(j) -= 4*n/H(m_SnewPositions(i,d),n) *
+                    m_SnewPositions(i,d)*H(m_SnewPositions(i,d),n-1);
             } else {
-                m_laplacianSumVec(j) += 4*n/m_hermite3DMatrix(i,d)(n) *
-                    ((n-1)*m_hermite3DMatrix(i,d)(n-2) -
-                     m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1));
+//                 m_laplacianSumVec(j) += 4*n/m_hermite3DMatrix(i,d)(n) *
+//                     ((n-1)*m_hermite3DMatrix(i,d)(n-2) -
+//                      m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1));
+                m_laplacianSumVec(j) += 4*n/H(m_SnewPositions(i,d),n-1) *
+                    ((n-1)*H(m_SnewPositions(i,d),n-2) -
+                     m_SnewPositions(i,d)*H(m_SnewPositions(i,d),n-1));
             } // end ifeifelse
         } // end ford
         m_laplacianSumVec(j) *= slater->getWavefunction(i,j);
