@@ -93,7 +93,7 @@ class Minimizer {
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 10.0;
+            pMTLS.aMax0 = 0.1;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -545,10 +545,6 @@ class Minimizer {
         void minimize(bool showBar=true) {
             /* sample and find optimal parameters */
             
-            // tell vmc to set derivatives with respect to parameters when
-            // sampling
-            vmc->m_setVariationalDerivatives = true;
-            
             // show progressbar at 0
             if (showBar) {
                 showProgress(0);
@@ -599,10 +595,6 @@ class Minimizer {
                 showProgress(m_runMax-1);
             } // end if
            
-            // tell vmc to not set derivatives with respect to parameters when
-            // sampling
-            vmc->m_setVariationalDerivatives = false;
-
             if (outfile.is_open()) {
                 outfile.close();
             } // end if

@@ -34,7 +34,7 @@ class VMC {
 
         double tmpPotentialEnergy, tmpKineticEnergy, tmpEnergy;
 
-        bool m_setVariationalDerivatives, m_findStep, m_makeOnebodyDensities;
+        bool m_findStep, m_makeOnebodyDensities;
 
         void derivativeVariational() {
             /* calculate derivative of expectation value */
@@ -100,12 +100,7 @@ class VMC {
             /* sum up values, only calculate new values if state is accepted
              * (that is if accepted is true) */
 
-            if ((accepted || (i==0)) && !m_setVariationalDerivatives) {
-                /* calculate local energy and save kinetic and potential parts
-                 * */
-                calculateLocalValues();
-                accumulateLocalValues();
-            } else if ((accepted || (i==0)) && m_setVariationalDerivatives) {
+            if (accepted || (i==0)) {
                 /* calculate local energy and save kinetic and potential parts
                  * along with derivatives with respect to variational
                  * parameters */
@@ -114,10 +109,7 @@ class VMC {
 
                 wf->setVariationalDerivatives();
                 accumulateLocalDerivatives();
-            } else if ((!accepted && (i>0)) && !m_setVariationalDerivatives) {
-                /* use old energies in case of rejection */
-                accumulateLocalValues();
-            } else if ((!accepted && (i>0)) && m_setVariationalDerivatives) {
+            } else if (!accepted && (i>0)) {
                 /* use old energies and derivatves in case of rejection */
                 accumulateLocalValues();
                 accumulateLocalDerivatives();
@@ -150,7 +142,6 @@ class VMC {
             m_dim = wf->getDimension();
             m_findStep = false;
             m_hasSampleSetup = false;
-            m_setVariationalDerivatives = false;
             stepMonteCarlo = step;
             sqrtStep = sqrt(stepMonteCarlo);
             numParticles = wf->getNumberOfParticles();
@@ -232,9 +223,7 @@ class VMC {
             // average expectation values
             m_accumulativeValues /= m_maxIterations;
 
-            if (m_setVariationalDerivatives) {
-                derivativeVariational();
-            } // end if
+            derivativeVariational();
 
             return m_accumulativeValues.energy;
         } // end function sampler

@@ -64,6 +64,7 @@ class SlaterJastrow : public Slater, public Jastrow {
         void update(const Eigen::VectorXd&, const unsigned int&);
         void resetGradient(const unsigned int&);
         void acceptGradient(const unsigned int&);
+        void set(const Eigen::MatrixXd);
         
         const double &getJastrowGradient(const unsigned int&, const unsigned
                 int&) const;

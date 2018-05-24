@@ -218,7 +218,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
         vmc->setParameters(parametersBuffer.row(Methods::argMin(energies)));
 
         if (((numProcs > 1) && (minimizer != NULL)) ||
-                !inputs["minimization"][0].as<std::string>().compare("SIAN")) {
+                inputs["minimization"][0].as<std::string>().compare("SIAN")) {
             minimizer->setMethod(inputs["minimization"][0].as<std::string>());
             minimizer->minimize(inputs["progress"].as<bool>());
         } // end if
@@ -285,7 +285,9 @@ template<typename Sampler> void finalize(YAML::Node& inputs, Sampler*& vmc,
         outfile << std::setprecision(14) << "Const: " <<
             inputs["omega"].as<double>() << "\nEnergy: " << finalValues(1) <<
             "\nAcceptance: " << finalValues(0) << "\nvar: " << var << "\nstd: "
-            << std << "\nBeta: " << vmc->getParameters()(0) << "\n" <<
+            << std << "\nParameters: " << vmc->getParameters().transpose() <<
+            "\n" << std << "\nDerivative: " <<
+            vmc->wf->getVariationalDerivatives().transpose() << "\n" <<
             std::endl;
     } else {// end if
         /* print values */
@@ -307,6 +309,8 @@ template<typename Sampler> void finalize(YAML::Node& inputs, Sampler*& vmc,
         std::cout << std::setprecision(14) << "Energy: " << finalValues(1) <<
             "\nAcceptance: " << finalValues(0) << "\nvar: " << var << "\nstd: "
             << std << "\nParameters: " << vmc->getParameters().transpose() <<
+            "\nDerivative: " <<
+            vmc->wf->getVariationalDerivatives().transpose() << "\n" <<
             "\nSampling " "duration: " << sampleTime.count() << " s" <<
             "\nResampling " "duration: " << resampleTime/numProcs << " s" <<
             std::endl;

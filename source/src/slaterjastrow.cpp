@@ -120,6 +120,13 @@ void SlaterJastrow::initializeMatrices() {
     Slater::initializeMatrices();
 } // end function initializeJastrowMatrices
 
+void SlaterJastrow::set(const Eigen::MatrixXd newPositions) {
+    /* set new positions and calculate new values for all matrices */
+    Slater::set(newPositions);
+
+    calculateGradient();
+} // end function set
+
 void SlaterJastrow::acceptState(const unsigned int& p) {
     /* accept state and update wavefunction */
     acceptGradient(p);

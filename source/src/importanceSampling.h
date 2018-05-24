@@ -59,8 +59,11 @@ class ImportanceSampling : public VMC<T> {
             // set positions in wavefunction
             VMC<T>::wf->set(newPositions);
 
-            // set gradient
-            VMC<T>::wf->calculateGradient();
+            // set gradient still if only Slater is used
+            if constexpr (std::is_same<T, Slater>()) {
+                /* figure it out at compile time */
+                VMC<T>::wf->calculateGradient();
+            } // end if
 
             // set quantum force
             m_oldQuantumForce.setZero();
