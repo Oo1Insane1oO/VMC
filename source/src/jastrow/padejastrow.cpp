@@ -111,13 +111,12 @@ const Eigen::VectorXd& PadeJastrow::jastrowGradientExpression(const unsigned
 double PadeJastrow::jastrowLaplacian() {
     /* calculate and return Laplacian of Jastrow factor */
     double res = 0;
+    const double& beta = SJ->m_parameters(m_parametersDispl);
     for (unsigned int i = 0; i < SJ->m_numParticles; ++i) {
         for (unsigned int j = i+1; j < SJ->m_numParticles; ++j) {
-            double denom = 1. / (1 + SJ->m_parameters(m_parametersDispl) *
-                    SJ->getNewDistance(i,j));
+            double denom = 1. / (1 + beta * SJ->getNewDistance(i,j));
             res += spinFactor(i,j) * (denom*denom) *
-                ((SJ->m_dim-1)/SJ->getNewDistance(i,j) -
-                 2*SJ->m_parameters(m_parametersDispl) * denom) +
+                ((SJ->m_dim-1)/SJ->getNewDistance(i,j) - 2*beta * denom) +
                 m_jastrowGradient3DMatrix(i,j).squaredNorm();
         } // end forj
     } // end fori

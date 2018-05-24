@@ -87,13 +87,13 @@ class Minimizer {
         void setParamsMTLS() {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
-            pMTLS.mu = 0.001;
-            pMTLS.eta = 0.4;
+            pMTLS.mu = 0.0001;
+            pMTLS.eta = 0.1;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 1.0;
+            pMTLS.aMax0 = 0.02;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -331,7 +331,7 @@ class Minimizer {
                         bestEnergy*bestEnergy) / vmc->m_maxIterations;
                 oldEnergy = vmc->getEnergy();
                 maxValue = 10.;
-                tempMax = 100.;
+                tempMax = 50.;
                 temp = tempMax;
                 sianIdx = 1;
 
@@ -342,7 +342,7 @@ class Minimizer {
             Eigen::ArrayXd newParameters =
                 Eigen::ArrayXd::Zero(vmc->wf->m_parameters.size()) .
                 unaryExpr([](double val) {
-                        static std::normal_distribution<double> nd(val, 1.0);
+                        std::normal_distribution<double> nd(val, 1.0);
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::
                                         high_resolution_clock::now() .
@@ -416,23 +416,19 @@ class Minimizer {
              * return false in case break threshold is reached and false if not
              * (return true by default) */
 
-            double testNorm = vmc->m_newDerivativeParameters.norm() /
-                Methods::max(1.0, vmc->wf->m_parameters.norm());
-//             double testNorm = vmc->m_newDerivativeParameters.norm();
+//             double testNorm = vmc->m_newDerivativeParameters.norm() /
+//                 Methods::max(1.0, vmc->wf->m_parameters.norm());
+            double testNorm = vmc->m_newDerivativeParameters.norm();
             if (testNorm <= tol) {
                 /* break if values are sufficiently convergent */
                 return false;
-//             } else if ((m>=prevIdx) && ((m%prevIdx)==0) && (((prevValue -
-//                                 vmc->m_accumulativeValues.energy) /
-//                             vmc->m_accumulativeValues.energy) < tol)) {
-//                 /* break if relative improvement is sufficient */
-//                 return false;
             } else {
                 /* check for switches */
                 if (!currMethod.compare("SIAN") && (m > static_cast<unsigned
-                            int>(floor(m_runMax*annealingFraction)))) {
-                    /* Stop annealing when exhausted and use current best
-                     * parameters */
+                            int>(ceil(m_runMax*annealingFraction) + 1)) &&
+                        !method.compare("SIAN")) {
+                    /* Stop annealing when exhausted (unless main method is
+                     * SIAN) and use current best parameters */
                     vmc->setParameters(bestParameters);
                     if (!method.compare("BFGSADA") || !method.compare("BFGS"))
                     {
@@ -509,23 +505,37 @@ class Minimizer {
                 currMethod = "SD";
                 minimizeFunction = &Minimizer::minimizeSD;
             } // end if
-            
-            if (!(!minimizationMethod.compare("SD") ||
-                  !minimizationMethod.compare("CG") ||
-                  !minimizationMethod.compare("BFGS") ||
-                  !minimizationMethod.compare("CGADA") ||
-                  !minimizationMethod.compare("BFGSADA") ||
-                  !minimizationMethod.compare("SABFGS") ||
-                  !minimizationMethod.compare("ASGD"))) {
-                /* throw error if none of the above is given */
-                throw std::runtime_error("Please give method, SD, BFGS, ASGD "
-                        "BFGSADA, CG or CGADA");
-            } // end ifeifeifelse
 
+            checkMethod(minimizationMethod);
         } // end constructor
         
         virtual ~Minimizer () {
         } // end deconstructor
+
+        void checkMethod(const std::string& meth) {
+            /* make sure method is implemented */
+            if (!(!meth.compare("SD") ||
+                  !meth.compare("CG") ||
+                  !meth.compare("BFGS") ||
+                  !meth.compare("CGADA") ||
+                  !meth.compare("BFGSADA") ||
+                  !meth.compare("SABFGS") ||
+                  !meth.compare("ASGD") ||
+                  !meth.compare("SIAN"))) {
+                /* throw error if none of the above is given */
+                throw std::runtime_error("Please give method, SD, BFGS, ASGD "
+                        "BFGSADA, CG or CGADA");
+            } // end if
+        } // end function checkMethod
+
+        void setMethod(const std::string& meth) {
+            /* set method to be used */
+            checkMethod(meth);
+            method = meth;
+            currMethod = meth;
+            annealingFraction = 0.0;
+            hasSetup = false;
+        } // end function setMethod
 
         void setAnnealingFraction(double a) {
             /* set the fraction at which annealing should proceed */
@@ -571,12 +581,12 @@ class Minimizer {
                 // sample and minimize with specified method
                 (this->*minimizeFunction)();
 
-//                     vmc->m_newDerivativeParameters.transpose() << "     " <<
-//                     vmc->wf->m_parameters.transpose() << "   " <<
                 std::cout << std::setprecision(14) <<
                     Methods::stringPos(vmc->m_rank+3, vmc->m_numprocs) <<
                     vmc->getAcceptance() << "       " <<
                     vmc->m_newDerivativeParameters.norm() << "      " <<
+                    vmc->m_newDerivativeParameters.transpose() << "     " <<
+                    vmc->wf->m_parameters.transpose() << "   " <<
                     "    " << vmc->m_accumulativeValues.energy << "   " <<
                     (vmc->m_accumulativeValues.energySquared -
                      vmc->m_accumulativeValues.energy *

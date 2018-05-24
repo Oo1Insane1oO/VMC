@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <chrono>
 #include <random>
+#include <type_traits>
+#include <cassert>
 
 #include <Eigen/Dense>
 #include <mpi.h>
@@ -21,6 +23,21 @@
 #include "../bruteforce.h"
 #include "../slaterjastrow.h"
 #include "../slater.h"
+
+template<class T, class W> constexpr double threshold() {
+    /* return threshold for acceptance */
+    if constexpr (std::is_same_v<T, ImportanceSampling<W>>) {
+        /* case importance sampling */
+        return 0.96;
+    } else if (std::is_same_v<T, Bruteforce<W>>) {
+        /* case bruteforce */
+        return 0.5;
+    } else {
+        /* fail if type is not Bruteforce or ImportanceSampling */
+        static_assert(std::disjunction_v<std::is_same<T, Bruteforce<W>>,
+                std::is_same<T, ImportanceSampling<W>>>);
+    } // end if constexpr
+} // end function threshold 
 
 void resample(YAML::Node&, Resampler*&, double&, int);
 void setParameters(YAML::Node&, Eigen::VectorXd&, unsigned int=1);
@@ -107,13 +124,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                 inputs["minimization"][1].as<unsigned int>(),
                 inputs["minimization"][2].as<double>());
 
-        if (inputs["importance"].as<bool>()) {
-            /* make sure acceptance is at all times high */
-            minimizer->setFunctionThresh(0.96);
-        } else {
-            /* make sure acceptance is at all times acceptable */
-            minimizer->setFunctionThresh(0.5);
-        } // end ifselse
+        minimizer->setFunctionThresh(threshold<Sampler, T>());
     } // end if
 
     // find initial parameters
@@ -158,15 +169,21 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                                         std::chrono::high_resolution_clock ::
                                         now().time_since_epoch().count()) .
                                     substr(10)));
-                        std::uniform_real_distribution<double> nd(0.9,1.7);
+                        static std::uniform_real_distribution<double>
+                        nd(0.9,1.7);
                         return nd(rng);
                     });
         } // end if
     } else {
         /* Dont do annealing if parameters are given */
         if (minimizer != NULL) {
-            minimizer->setAnnealingFraction(0.0);
+            minimizer->setMethod(inputs["minimization"][0].as<std::string>());
         } // end if
+    } // end if
+
+    if ((numProcs > 1) && (minimizer != NULL)) {
+        /* perform annealing fully in parallel */
+        minimizer->setAnnealingFraction(1.0);
     } // end if
 
     vmc->setParameters(initialParameters);
@@ -194,11 +211,17 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
     if (myRank == 0) {
         /* choose parameters which give lowest(stable) energy */
         for (unsigned int p = 0; p < numProcs; ++p) {
-            if (acceptances(p) < 0.3) {
+            if (acceptances(p) < threshold<Sampler, T>()) {
                 energies(p) = 1e16;
             } // end if
         } // end forp
         vmc->setParameters(parametersBuffer.row(Methods::argMin(energies)));
+
+        if ((numProcs > 1) && (minimizer != NULL) &&
+                !inputs["minimization"][0].as<std::string>().compare("SIAN")) {
+            minimizer->setMethod(inputs["minimization"][0].as<std::string>());
+            minimizer->minimize(inputs["progress"].as<bool>());
+        } // end if
     } // end if
 
     // clear memory
@@ -371,7 +394,8 @@ template<class Wavefunction> double run(YAML::Node& inputs) {
     /* run with wavefunction T */
     double E;
     if (inputs["importance"].as<bool>()) {
-        E = runSpecified<ImportanceSampling<Wavefunction>, Wavefunction>(inputs);
+        E = runSpecified<ImportanceSampling<Wavefunction>,
+          Wavefunction>(inputs);
     } else {
         E = runSpecified<Bruteforce<Wavefunction>, Wavefunction>(inputs);
     } // end if
