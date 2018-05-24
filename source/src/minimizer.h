@@ -88,12 +88,12 @@ class Minimizer {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
             pMTLS.mu = 0.0001;
-            pMTLS.eta = 0.1;
+            pMTLS.eta = 0.4;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 0.02;
+            pMTLS.aMax0 = 10.0;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -205,11 +205,11 @@ class Minimizer {
             // set search direction
             searchDirection = - hessianInverse *
                 vmc->m_oldDerivativeParameters;
-            double sdNorm = searchDirection.norm();
-            if (sdNorm >= 1e-10) {
-                /* dont normalize if close to minimum for stability */
-                searchDirection /= sdNorm;
-            } // end if
+//             double sdNorm = searchDirection.norm();
+//             if (sdNorm >= 1e-10) {
+//                 /* dont normalize if close to minimum for stability */
+//                 searchDirection /= sdNorm;
+//             } // end if
 
             // run linesearch
             double s = MTLS::linesearchMoreThuente<>(&pMTLS, searchDirection,

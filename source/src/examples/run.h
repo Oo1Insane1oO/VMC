@@ -217,7 +217,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
         } // end forp
         vmc->setParameters(parametersBuffer.row(Methods::argMin(energies)));
 
-        if ((numProcs > 1) && (minimizer != NULL) &&
+        if (((numProcs > 1) && (minimizer != NULL)) ||
                 !inputs["minimization"][0].as<std::string>().compare("SIAN")) {
             minimizer->setMethod(inputs["minimization"][0].as<std::string>());
             minimizer->minimize(inputs["progress"].as<bool>());
