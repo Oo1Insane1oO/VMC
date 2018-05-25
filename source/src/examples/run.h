@@ -286,8 +286,8 @@ template<typename Sampler> void finalize(YAML::Node& inputs, Sampler*& vmc,
             inputs["omega"].as<double>() << "\nEnergy: " << finalValues(1) <<
             "\nAcceptance: " << finalValues(0) << "\nvar: " << var << "\nstd: "
             << std << "\nParameters: " << vmc->getParameters().transpose() <<
-            "\n" << std << "\nDerivative: " <<
-            vmc->wf->getVariationalDerivatives().transpose() << "\n" <<
+            "\nDerivative: " <<
+            vmc->getNewDerivativeParameters().transpose() << "\n" <<
             std::endl;
     } else {// end if
         /* print values */
@@ -310,7 +310,7 @@ template<typename Sampler> void finalize(YAML::Node& inputs, Sampler*& vmc,
             "\nAcceptance: " << finalValues(0) << "\nvar: " << var << "\nstd: "
             << std << "\nParameters: " << vmc->getParameters().transpose() <<
             "\nDerivative: " <<
-            vmc->wf->getVariationalDerivatives().transpose() << "\n" <<
+            vmc->getNewDerivativeParameters().transpose() << "\n" <<
             "\nSampling " "duration: " << sampleTime.count() << " s" <<
             "\nResampling " "duration: " << resampleTime/numProcs << " s" <<
             std::endl;
@@ -392,7 +392,7 @@ template<class Sampler, class Wavefunction> double runSpecified(YAML::Node&
     } // end if
 
     return E;
-} // end function runSpecified 
+} // end function runSpecified
 
 template<class Wavefunction> double run(YAML::Node& inputs) {
     /* run with wavefunction T */

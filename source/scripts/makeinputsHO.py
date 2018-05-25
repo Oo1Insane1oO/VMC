@@ -22,26 +22,26 @@ def createMagic(numParticlesMax, dim):
     return magic
 # end function createMagic
 
-def makeFiles(omegaList, numParticlesMax, dim, dName, dataDirName):
+def makeFiles(omegaList, steplist, numParticlesMax, dim, dName, dataDirName):
     particles = createMagic(numParticlesMax, dim)
-    for w in omegaList:
+    for w,st in zip(omegaList,steplist):
         for p,i in enumerate(particles):
             fname = "w%.2f_D%i_N%i" % (w, dim, i)
             with open(dName + "/" + fname + "HOrun.yaml", "w") as openFile:
                 openFile.write(('omega: %.2f\n'
                                'numparticles: %i\n'
                                'dim: %i\n'
-                               'stepmc: 0.01\n'
+                               'stepmc: %.3f\n'
                                'numparameters: 2\n'
                                'numhiddenbias: 0\n'
                                'maxitermc: 1048576\n'
                                'progress: true\n'
                                'importance: true\n' 
                                'jastrow: true\n'
-                               'minimization: ["BFGS", 300, 0.00001, 215000]\n'
+                               'minimization: ["SIAN", 10000, 0.00001, 500000]\n'
                                'resampling: ["autoblocking", 1]\n'
                                'output: '+'"' + dataDirName + '/' +
-                               fname + ".yaml" + '"\n') % (w,i,dim))
+                               fname + ".yaml" + '"\n') % (w,i,dim,st))
             # end with open openFile
         # end fori
     # end forw
@@ -53,11 +53,12 @@ if __name__ == "__main__":
         dim = int(sys.argv[2])
         dirName = sys.argv[3]
         dataDirName = sys.argv[4]
-        omegaList = map(float, sys.argv[6:])
+        omegaList = map(float, sys.argv[5].strip('[]').split(',')) 
+        stepList = map(float, sys.argv[6].strip('[]').split(',')) 
     except IndexError:
         print("USAGE: 'Nmax' 'dim' 'dir' 'datadir' 'list omega'")
         sys.exit(1)
     # end try-except
 
-    makeFiles(omegaList, numParticlesMax, dim, dirName, dataDirName)
+    makeFiles(omegaList, stepList, numParticlesMax, dim, dirName, dataDirName)
 # end ifmain

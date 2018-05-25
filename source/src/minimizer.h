@@ -93,7 +93,7 @@ class Minimizer {
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 0.1;
+            pMTLS.aMax0 = 0.001;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -104,7 +104,7 @@ class Minimizer {
         void minimizeSD() {
             /* find optimal variational parameters */
             if (!hasSetup) {
-                step = 0.001;
+                step = 0.01;
 
                 hasSetup = true;
             } // end if
