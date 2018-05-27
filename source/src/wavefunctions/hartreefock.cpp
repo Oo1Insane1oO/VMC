@@ -61,7 +61,7 @@ void HartreeFock::initializeParameters(const double& w, const unsigned int& L,
 
     m_numBasis = L;
 
-    m_C = coefficientMatrix.sparseView(1e-13);
+    m_C = coefficientMatrix.sparseView(1e-5);
 
    // initialize basis (wrapper)
     HartreeFockBasis::setup(2*L, slater->m_dim);
