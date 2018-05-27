@@ -38,7 +38,7 @@ def makeFiles(omegaList, steplist, numParticlesMax, dim, dName, dataDirName):
                                'progress: true\n'
                                'importance: true\n' 
                                'jastrow: true\n'
-                               'minimization: ["SIAN", 10000, 0.00001, 500000]\n'
+                               'minimization: ["SIAN", 1000, 0.00001, 500000]\n'
                                'resampling: ["autoblocking", 1]\n'
                                'output: '+'"' + dataDirName + '/' +
                                fname + ".yaml" + '"\n') % (w,i,dim,st))
