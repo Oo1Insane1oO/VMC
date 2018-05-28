@@ -41,6 +41,7 @@ void Quantumdot::setParameters(const Eigen::VectorXd& newParameters) {
     /* update parameters */
     slater->m_parameters = newParameters;
     alpha = newParameters(0);
+    alphaSqrt = sqrt(alpha);
     beta = newParameters(1);
     aw = alpha*omega;
     sqaw = sqrt(aw);
@@ -73,8 +74,8 @@ double Quantumdot::variationalDerivativeExpression(const unsigned int& i, const
         if (n==0) {
             continue;
         } // end if
-        sum += n/slater->m_parameters(l) * m_SnewPositions(i,d) *
-            m_hermite3DMatrix(i,d)(n-1) / m_hermite3DMatrix(i,d)(n);
+        sum += n/alphaSqrt * m_SnewPositions(i,d) * m_hermite3DMatrix(i,d)(n-1)
+            / m_hermite3DMatrix(i,d)(n);
     } // end ford
     return sum * slater->getWavefunction(i,j);
 } // end function variationalDerivativeExpression

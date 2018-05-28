@@ -88,7 +88,7 @@ class Minimizer {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
             pMTLS.mu = 0.0001;
-            pMTLS.eta = 0.4;
+            pMTLS.eta = 0.6;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
@@ -104,7 +104,7 @@ class Minimizer {
         void minimizeSD() {
             /* find optimal variational parameters */
             if (!hasSetup) {
-                step = 0.01;
+                step = 0.0001;
 
                 hasSetup = true;
             } // end if
