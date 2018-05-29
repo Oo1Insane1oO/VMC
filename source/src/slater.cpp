@@ -496,6 +496,7 @@ void Slater::calculateGradient() {
     /* calculate ratio between gradient of new wavefunction and new
      * wavefunction for all particles */
     m_oldGradient = m_gradient;
+    m_gradient.setZero();
     for (unsigned int i = 0; i < m_numParticles; ++i) {
         unsigned int ii, wi;
         if (i < halfSize) {

@@ -12,7 +12,7 @@ class Slater;
 
 class Quantumdot : public QuantumdotBasis {
     private:
-        double alpha, beta, omega, omegaSq, aw, sqaw, alphaSqrt;
+        double alpha, beta, omega, omegaSq, aw, sqaw;
         
         bool m_interaction;
         

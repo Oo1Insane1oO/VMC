@@ -61,7 +61,8 @@ void HartreeFock::initializeParameters(const double& w, const unsigned int& L,
 
     m_numBasis = L;
 
-    m_C = coefficientMatrix.sparseView(1e-5);
+    m_C = coefficientMatrix.sparseView(1,1e-6);
+    m_C.makeCompressed();
 
    // initialize basis (wrapper)
     HartreeFockBasis::setup(2*L, slater->m_dim);
@@ -225,14 +226,15 @@ double HartreeFock::calculateWavefunction(const unsigned int& p, const unsigned
     /* fill in */
     double res = 0.0;
     for (Eigen::SparseMatrix<double>::InnerIterator lIt(m_C, j); lIt; ++lIt) {
-        double lprod = lIt.value();
-        for (unsigned int d = 0; d < slater->m_dim; ++d) {
-            const int& n = HartreeFockBasis::getn(lIt.row(),d);
-            lprod *= m_hermite3DMatrix(p,d)(n) * m_hermiteNormalizations(n);
-        } // end ford
-        res += lprod;
+//         double lprod = lIt.value();
+//         for (unsigned int d = 0; d < slater->m_dim; ++d) {
+//             const int& n = HartreeFockBasis::getn(lIt.row(),d);
+//             lprod *= m_hermite3DMatrix(p,d)(n) * m_hermiteNormalizations(n);
+//         } // end ford
+//         res += lprod; 
+        res += lIt.value() * m_SWavefunctionMatrix(p,lIt.row());
     } // end forl
-    return res * exp(-0.5*m_SnewPositions.row(p).squaredNorm());
+    return res;
 } // end function calculateWavefunction
 
 double HartreeFock::gradientExpression(const unsigned int& p, const int& j,
@@ -243,15 +245,15 @@ double HartreeFock::gradientExpression(const unsigned int& p, const int& j,
     for (Eigen::SparseMatrix<double>::InnerIterator lIt(m_C, j); lIt; ++lIt) {
         const int& nd = HartreeFockBasis::getn(lIt.row(),d);
         if(nd==0) {
-            res -= lIt.value() * slater->getNewPosition(p,d) *
+            res -= lIt.value() * m_SnewPositions(p,d) *
                 m_SWavefunctionMatrix(p,lIt.row());
         } else {
-            res += lIt.value() * (2*nd * m_hermite3DMatrix(p,d)(nd-1) /
-                    m_hermite3DMatrix(p,d)(nd) - slater->getNewPosition(p,d)) *
+            res += lIt.value() * (2*sqrtOmega*nd * m_hermite3DMatrix(p,d)(nd-1)
+                    / m_hermite3DMatrix(p,d)(nd) - m_SnewPositions(p,d)) *
                 m_SWavefunctionMatrix(p,lIt.row());
         } // end ifelse
     } // end forl
-    return res * sqrtOmega;
+    return res;
 } // end function calculateGradient
 
 const Eigen::VectorXd& HartreeFock::laplacianExpression(const unsigned int& i,

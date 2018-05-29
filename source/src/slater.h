@@ -50,6 +50,8 @@ class Slater : public WF {
 
         void resetDistance(const unsigned int&);
 
+        void setGradient(const unsigned int&, const unsigned int&);
+
     protected:
         unsigned int invIdx, waveIdx, spanIdx;
 
@@ -63,8 +65,6 @@ class Slater : public WF {
 
         Eigen::MatrixXd m_newWavefunctionMatrix, m_oldWavefunctionMatrix,
             m_newWavefunctionMatrixInverse, m_oldWavefunctionMatrixInverse;
-
-        void setGradient(const unsigned int&, const unsigned int&);
         
         double determinantRatio;
 

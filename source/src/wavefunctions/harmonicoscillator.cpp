@@ -41,7 +41,6 @@ void Quantumdot::setParameters(const Eigen::VectorXd& newParameters) {
     /* update parameters */
     slater->m_parameters = newParameters;
     alpha = newParameters(0);
-    alphaSqrt = sqrt(alpha);
     beta = newParameters(1);
     aw = alpha*omega;
     sqaw = sqrt(aw);
@@ -74,8 +73,8 @@ double Quantumdot::variationalDerivativeExpression(const unsigned int& i, const
         if (n==0) {
             continue;
         } // end if
-        sum += n/alphaSqrt * m_SnewPositions(i,d) * m_hermite3DMatrix(i,d)(n-1)
-            / m_hermite3DMatrix(i,d)(n);
+        sum += n/alpha * m_SnewPositions(i,d) * m_hermite3DMatrix(i,d)(n-1) /
+            m_hermite3DMatrix(i,d)(n);
     } // end ford
     return sum * slater->getWavefunction(i,j);
 } // end function variationalDerivativeExpression
@@ -185,11 +184,10 @@ double Quantumdot::gradientExpression(const unsigned int& p, const int& j,
     /* calculate gradient expression */
     const int& n = QuantumdotBasis::getn(j,d);
     if (n==0) {
-        return - sqaw * slater->getNewPosition(p,d) *
-            slater->getWavefunction(p,j);
+        return - m_SnewPositions(p,d) * slater->getWavefunction(p,j);
     } // end if
-    return sqaw*(2*n*m_hermite3DMatrix(p,d)(n-1) / m_hermite3DMatrix(p,d)(n) -
-            slater->getNewPosition(p,d)) * slater->getWavefunction(p,j);
+    return (2*sqaw*n * m_hermite3DMatrix(p,d)(n-1) / m_hermite3DMatrix(p,d)(n)
+            - m_SnewPositions(p,d)) * slater->getWavefunction(p,j) ;
 } // end function calculateGradient
 
 const Eigen::VectorXd& Quantumdot::laplacianExpression(const unsigned int& i,

@@ -143,7 +143,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::high_resolution_clock::now().
                                         time_since_epoch().count()).substr(10)));
-                        std::normal_distribution<double> nd(0.0,0.01);
+                        std::normal_distribution<double> nd(0.0,0.001);
                         return nd(rng);
                     });
             } else { 

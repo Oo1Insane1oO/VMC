@@ -15,7 +15,7 @@ struct Accumulative {
     Eigen::VectorXd psiDerivativeTimesEnergy;
     Eigen::VectorXd psiDerivativeTimesEnergySquared;
 
-    Accumulative& operator << (const unsigned int& n) {
+    Accumulative& operator << (const size_t& n) {
         /* initialize vector with size n */
         this->acceptance = 0;
         this->energy = 0;
@@ -29,8 +29,7 @@ struct Accumulative {
         return *this;
     } // end operator << overload
 
-    template<typename T> Accumulative& operator /= (const T&
-            value) {
+    template<typename T> Accumulative& operator /= (const T& value) {
         /* overload divide operator to work as if struct Accumulative
          * was a vector */
         this->acceptance /= value;
@@ -45,8 +44,7 @@ struct Accumulative {
         return *this;
     } // end operator /= overload
     
-    template<typename T> Accumulative& operator *= (const T&
-            value) {
+    template<typename T> Accumulative& operator *= (const T& value) {
         /* overload multiplication operator to work as if struct
          * Accumulative was a vector */
         this->acceptance *= value;
@@ -61,8 +59,7 @@ struct Accumulative {
         return *this;
     } // end operator *= overload
     
-    template<typename T> Accumulative& operator = (const T& value)
-    {
+    template<typename T> Accumulative& operator = (const T& value) {
         /* overload = to set all elements in struct to value */
         this->acceptance = value;
         this->energy = value;
@@ -78,34 +75,34 @@ struct Accumulative {
         return *this;
     } // end operator = overload
     
-    template<typename T> Accumulative& operator += (const T&
-            value) {
+    template<typename T> Accumulative& operator += (const T& value) {
         /* overload += to add value to all elements in struct */
         this->acceptance += value;
         this->energy += value;
         this->energySquared += value;
         this->potentialEnergy += value;
         this->kineticEnergy += value;
-        Eigen::VectorXd tmpVec = Eigen::VectorXd::Constant(2, value);
-        this->psiDerivative += tmpVec;
-        this->psiDerivativeTimesEnergy += tmpVec;
-        this->psiDerivativeTimesEnergySquared += tmpVec;
+        this->psiDerivative = this->psiDerivative.array() + value;
+        this->psiDerivativeTimesEnergy = this->psiDerivativeTimesEnergy.array()
+            + value;
+        this->psiDerivativeTimesEnergySquared =
+            this->psiDerivativeTimesEnergySquared.array() + value;
 
         return *this;
     } // end operator += overload
     
-    template<typename T> Accumulative& operator -= (const T&
-            value) {
+    template<typename T> Accumulative& operator -= (const T& value) {
         /* overload -= to subtract value from all elements in struct */
         this->acceptance -= value;
         this->energy -= value;
         this->energySquared -= value;
         this->potentialEnergy -= value;
         this->kineticEnergy -= value;
-        Eigen::VectorXd tmpVec = Eigen::VectorXd::Constant(2, value);
-        this->psiDerivative -= tmpVec;
-        this->psiDerivativeTimesEnergy -= tmpVec;
-        this->psiDerivativeTimesEnergySquared -= tmpVec;
+        this->psiDerivative = this->psiDerivative.array() - value;
+        this->psiDerivativeTimesEnergy = this->psiDerivativeTimesEnergy.array()
+            - value;
+        this->psiDerivativeTimesEnergySquared =
+            this->psiDerivativeTimesEnergySquared.array() - value;
 
         return *this;
     } // end operator -= overload

@@ -139,7 +139,7 @@ class ImportanceSampling : public VMC<T> {
                 maxIterations, int myRank, int numprocs) : VMC<T>(wavefunction,
                     step, initialParameters, maxIterations, myRank, numprocs) {
             /* initialize normal distribution */
-            normalDistribution = std::normal_distribution<double>(0,1);
+            normalDistribution = std::normal_distribution<double>{0,1};
         } // end constructor
 
         virtual ~ImportanceSampling () {

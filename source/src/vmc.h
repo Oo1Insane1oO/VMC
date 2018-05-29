@@ -43,7 +43,7 @@ class VMC {
                  m_accumulativeValues.energy *
                  m_accumulativeValues.psiDerivative);
 // 
-//             m_newDerivativeParameters = 2. *
+//             m_newDerivativeParameters = 2./m_maxIterations *
 //                 (m_accumulativeValues.psiDerivativeTimesEnergySquared +
 //                  m_accumulativeValues.psiDerivativeTimesEnergy -
 //                  (m_accumulativeValues.energySquared +
@@ -145,13 +145,13 @@ class VMC {
             stepMonteCarlo = step;
             sqrtStep = sqrt(stepMonteCarlo);
             numParticles = wf->getNumberOfParticles();
-            
-            std::mt19937_64 genMT64(std::stoi(std::to_string(
+           
+            std::mt19937_64 genMT64(std::stol(std::to_string(
                             std::chrono::high_resolution_clock::now().
                             time_since_epoch().count()).substr(10)));
-            realDistribution = std::uniform_real_distribution<double>(0, 1);
-            discreteDistribution = std::uniform_int_distribution<unsigned int>(0,
-                    numParticles-1);
+            realDistribution = std::uniform_real_distribution<double>{0, 1};
+            discreteDistribution = std::uniform_int_distribution<unsigned int>{0,
+                    numParticles-1};
 
             numParameters = initialParameters.size();
             wf->setParameters(initialParameters);
