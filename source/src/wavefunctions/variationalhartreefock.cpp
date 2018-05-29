@@ -273,12 +273,12 @@ double VariationalHartreeFock::gradientExpression(const unsigned int& p, const i
             res -= lIt.value() * m_SnewPositions(p,d) *
                 m_SWavefunctionMatrix(p,lIt.row());
         } else {
-            res += lIt.value() * (2*sqrtaw*nd * m_hermite3DMatrix(p,d)(nd-1) /
+            res += lIt.value() * (2*nd * m_hermite3DMatrix(p,d)(nd-1) /
                     m_hermite3DMatrix(p,d)(nd) - m_SnewPositions(p,d)) *
                 m_SWavefunctionMatrix(p,lIt.row());
         } // end ifelse
     } // end forl
-    return res;
+    return res*sqrtaw;
 } // end function calculateGradient
 
 const Eigen::VectorXd& VariationalHartreeFock::laplacianExpression(const

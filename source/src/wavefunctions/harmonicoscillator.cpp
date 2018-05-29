@@ -186,8 +186,9 @@ double Quantumdot::gradientExpression(const unsigned int& p, const int& j,
     if (n==0) {
         return - m_SnewPositions(p,d) * slater->getWavefunction(p,j);
     } // end if
-    return (2*sqaw*n * m_hermite3DMatrix(p,d)(n-1) / m_hermite3DMatrix(p,d)(n)
-            - m_SnewPositions(p,d)) * slater->getWavefunction(p,j) ;
+    return sqaw * (2*n * m_hermite3DMatrix(p,d)(n-1) /
+            m_hermite3DMatrix(p,d)(n) - m_SnewPositions(p,d)) *
+        slater->getWavefunction(p,j);
 } // end function calculateGradient
 
 const Eigen::VectorXd& Quantumdot::laplacianExpression(const unsigned int& i,

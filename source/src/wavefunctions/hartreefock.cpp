@@ -248,12 +248,12 @@ double HartreeFock::gradientExpression(const unsigned int& p, const int& j,
             res -= lIt.value() * m_SnewPositions(p,d) *
                 m_SWavefunctionMatrix(p,lIt.row());
         } else {
-            res += lIt.value() * (2*sqrtOmega*nd * m_hermite3DMatrix(p,d)(nd-1)
-                    / m_hermite3DMatrix(p,d)(nd) - m_SnewPositions(p,d)) *
+            res += lIt.value() * (2*nd * m_hermite3DMatrix(p,d)(nd-1) /
+                    m_hermite3DMatrix(p,d)(nd) - m_SnewPositions(p,d)) *
                 m_SWavefunctionMatrix(p,lIt.row());
         } // end ifelse
     } // end forl
-    return res;
+    return res * sqrtOmega;
 } // end function calculateGradient
 
 const Eigen::VectorXd& HartreeFock::laplacianExpression(const unsigned int& i,
