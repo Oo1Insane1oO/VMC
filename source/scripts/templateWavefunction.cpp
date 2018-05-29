@@ -62,7 +62,7 @@ void claCL::initializeMatrices() {
     /* initialize matrices with default 0 */
     /* initialize any matrix/vector dependant on the position here. Is will be
      * called in Slater every time corresponding function there is called */
-    m_laplacianSumVec = Eigen::VectorXd::Zero(m_numParticles/2);
+    m_laplacianSumVec = Eigen::VectorXd::Zero(slater->m_numParticles/2);
 } // end function setMatricesToZero
 
 void claCL::update(const Eigen::VectorXd& newPosition, const unsigned int&

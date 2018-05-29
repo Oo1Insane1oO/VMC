@@ -10,7 +10,7 @@ Slater::Slater(const unsigned int& dim, const unsigned int& n, const
 
     // allocate space for initial parameters and derivatives (these are assumed
     // to include the Jastrow parts if given)
-    setParameters(initialParameters);
+    WF::setParameters(initialParameters);
     m_firstDerivativesParameters =
         Eigen::VectorXd::Zero(initialParameters.size());
 } // end function constructor

@@ -33,7 +33,7 @@ class claCL : public clabasis {
         const Eigen::VectorXd& laplacianExpression(const unsigned int&, const
                 unsigned int&);
         double variationalDerivativeExpression(const unsigned int&, const
-                unsigned int&);
+                unsigned int&, const double&);
 
         void reSetAll();
         void initializeMatrices();

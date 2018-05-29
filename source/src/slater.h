@@ -13,6 +13,12 @@
     using WF = HartreeFock;
 #endif
 
+#ifdef VARIATIONALHARTREEFOCK
+    #include "wavefunctions/variationalhartreefock.h"
+    class VariationalHartreeFock;
+    using WF = VariationalHartreeFock;
+#endif
+
 #ifdef TESTWAVE 
     #include "wavefunctions/testwave.h"
     class testWave;

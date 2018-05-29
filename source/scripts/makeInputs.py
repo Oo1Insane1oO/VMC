@@ -20,11 +20,12 @@ for fname in os.listdir(path):
         tmpDict["stepmc"] = stepList[omgIdx]
         tmpDict["numparameters"] = nParams
         tmpDict["numhiddenbias"] = nHidden
-        tmpDict["maxitermc"] = 1048576
+#         tmpDict["maxitermc"] = 1048576
+        tmpDict["maxitermc"] = 100000
         tmpDict["importance"] = True
         tmpDict["jastrow"] = True
         tmpDict["progress"] = True
-        tmpDict["minimization"] = [miniMeth, miniIter, 0.0001, 350000]
+        tmpDict["minimization"] = [miniMeth, miniIter, 0.0001, 100000]
         tmpDict["resampling"] = ["autoblocking", 1]
         outFname = "w" + str(omegaList[omgIdx]) + "_D" + str(tmpDict["dim"]) +\
                 "_N" + str(tmpDict["numparticles"]) + "_HFHO"

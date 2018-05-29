@@ -48,7 +48,7 @@ double run(const std::string&);
 double run(YAML::Node& inputs);
 bool checkInputFile(YAML::Node&);
 
-#ifdef HARTREEFOCK
+#if defined HARTREEFOCK || defined VARIATIONALHARTREEFOCK
 template<class T> T* setWavefunction(YAML::Node& inputs, const Eigen::MatrixXd&
         parameters) {
     /* set wavefunction object with coefficients from file */
