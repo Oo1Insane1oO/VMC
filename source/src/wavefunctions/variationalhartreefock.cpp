@@ -21,15 +21,6 @@ VariationalHartreeFock::VariationalHartreeFock(Slater* sIn) :
 VariationalHartreeFock::~VariationalHartreeFock() {
 } // end deconstructor
 
-void VariationalHartreeFock::setHermite3DMatrix(const unsigned int& p) {
-    for (unsigned int d = 0; d < slater->m_dim; ++d) {
-        for (unsigned int j = 0; j <
-                VariationalHartreeFockBasis::Cartesian::getn().size(); ++j) {
-            m_hermite3DMatrix(p,d)(j) = H(m_SnewPositions(p,d), j);
-        } // end ford
-    } // end forj
-} // end function setHermite3DMatrix
-
 void VariationalHartreeFock::setParameters(const Eigen::VectorXd& newParameters) {
     /* update parameters */
     /* Set any extra parameters (i.e alpha) here if needed */
@@ -86,6 +77,15 @@ void VariationalHartreeFock::initializeParameters(const double& w, const
 //     setHermiteNormalizations();
 } // end function initializeParameters
 
+void VariationalHartreeFock::setHermite3DMatrix(const unsigned int& p) {
+    for (unsigned int d = 0; d < slater->m_dim; ++d) {
+        for (unsigned int j = 0; j <
+                VariationalHartreeFockBasis::Cartesian::getn().size(); ++j) {
+            m_hermite3DMatrix(p,d)(j) = H(m_SnewPositions(p,d), j);
+        } // end ford
+    } // end forj
+} // end function setHermite3DMatrix
+
 double VariationalHartreeFock::variationalDerivativeExpression(const unsigned int& i, const
         unsigned int& j, const double& alphal) {
     /* calculate and return expression in derivative with respect to
@@ -100,8 +100,9 @@ double VariationalHartreeFock::variationalDerivativeExpression(const unsigned in
             if (n==0) {
                 continue;
             } // end if
-            sum += n/alphal * m_SnewPositions(i,d) *
-                m_hermite3DMatrix(i,d)(n-1) / m_hermite3DMatrix(i,d)(n);
+            sum += n/alphal * sqrtaw*slater->getNewPosition(i,d) *
+                H(sqrtaw*slater->getNewPosition(i,d), n-1) /
+                H(sqrtaw*slater->getNewPosition(i,d), n);
         } // end ford
         res += lIt.value() * sum * m_SWavefunctionMatrix(i,lIt.row());
     } // end forlIt
@@ -112,7 +113,7 @@ void VariationalHartreeFock::set(const Eigen::MatrixXd& newPositions) {
     /* set function */
     /* set any matrix/vector dependant on the position here. Is will be called
      * in Slater every time corresponding function there is called */
-    m_SnewPositions = sqrtaw * newPositions;
+    m_SnewPositions = sqrtaw * slater->getNewPositions();
     m_SoldPositions = m_SnewPositions;
 
     for (unsigned int i = 0; i < slater->getNumberOfParticles(); ++i) {
@@ -196,13 +197,13 @@ void VariationalHartreeFock::setBasisWavefunction() {
 
 void VariationalHartreeFock::setBasisWavefunction(const unsigned int& p) {
     /* set row p in m_SWavefunctionMatrix */
-    double expFactor = exp(-0.5*m_SnewPositions.row(p).squaredNorm());
+    double expFactor = exp(-0.5*aw*slater->getNewPosition(p).squaredNorm());
     for (unsigned int l = 0; l < m_numBasis; ++l) {
         m_SWavefunctionMatrix(p,l) = expFactor;
         for (unsigned int d = 0; d < slater->m_dim; ++d) {
             const int& n = VariationalHartreeFockBasis::getn(l,d);
-            m_SWavefunctionMatrix(p,l) *= m_hermite3DMatrix(p,d)(n) *
-                m_hermiteNormalizations(n);
+            m_SWavefunctionMatrix(p,l) *= H(sqrtaw*slater->getNewPosition(p,d),
+                    n) * m_hermiteNormalizations(n);
         } // end ford
     } // end forl
 } // end function setBasisWavefunction
@@ -270,12 +271,13 @@ double VariationalHartreeFock::gradientExpression(const unsigned int& p, const i
     for (Eigen::SparseMatrix<double>::InnerIterator lIt(m_C, j); lIt; ++lIt) {
         const int& nd = VariationalHartreeFockBasis::getn(lIt.row(),d);
         if(nd==0) {
-            res -= lIt.value() * m_SnewPositions(p,d) *
+            res -= lIt.value() * aw*slater->getNewPosition(p,d)  *
                 m_SWavefunctionMatrix(p,lIt.row());
         } else {
-            res += lIt.value() * (2*sqrtaw*nd * m_hermite3DMatrix(p,d)(nd-1) /
-                    m_hermite3DMatrix(p,d)(nd) - m_SnewPositions(p,d)) *
-                m_SWavefunctionMatrix(p,lIt.row());
+            res += lIt.value() * (2*sqrtaw*nd *
+                    H(sqrtaw*slater->getNewPosition(p,d), nd-1) /
+                    H(sqrtaw*slater->getNewPosition(p,d), nd) -
+                    aw*slater->getNewPosition(p,d)) * m_SWavefunctionMatrix(p,lIt.row());
         } // end ifelse
     } // end forl
     return res;
@@ -286,7 +288,7 @@ const Eigen::VectorXd& VariationalHartreeFock::laplacianExpression(const
     /* calculate and return expression involved in the laplacian */
     /* fill in */
     m_laplacianSumVec.setZero();
-    double rlen = m_SnewPositions.row(i).squaredNorm() - slater->m_dim;
+    double rlen = aw*slater->getNewPosition(i).squaredNorm() - slater->m_dim;
     for (unsigned int j = 0; j < idx; ++j) {
         for (Eigen::SparseMatrix<double>::InnerIterator lIt(m_C, j); lIt;
                 ++lIt) {
@@ -296,12 +298,14 @@ const Eigen::VectorXd& VariationalHartreeFock::laplacianExpression(const
                 if (n==0) {
                     continue;
                 } else  if (n==1) {
-                    lsum -= 4*n/m_hermite3DMatrix(i,d)(n) *
-                        m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1);
+                    lsum -= 4*n/H(sqrtaw*slater->getNewPosition(i,d), n) *
+                        sqrtaw*slater->getNewPosition(i,d)*H(sqrtaw*slater->getNewPosition(i,d),
+                                n-1);
                 } else {
-                    lsum += 4*n/m_hermite3DMatrix(i,d)(n) *
-                        ((n-1)*m_hermite3DMatrix(i,d)(n-2) -
-                         m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1));
+                    lsum += 4*n/H(sqrtaw*slater->getNewPosition(i,d), n) *
+                        ((n-1)*H(sqrtaw*slater->getNewPosition(i,d), n-2) -
+                         sqrtaw*slater->getNewPosition(i,d)*H(sqrtaw*slater->getNewPosition(i,d),
+                             n-1));
                 } // end if
             } // end ford
             m_laplacianSumVec(j) += lIt.value() * lsum *
