@@ -34,7 +34,7 @@ void VariationalHartreeFock::setParameters(const Eigen::VectorXd& newParameters)
     /* update parameters */
     /* Set any extra parameters (i.e alpha) here if needed */
     slater->m_parameters = newParameters;
-    aw = newParameters(0);
+    aw = newParameters(0)*omega;
     awSq = aw*aw;
     sqrtaw = sqrt(aw);
     setHermiteNormalizations();
