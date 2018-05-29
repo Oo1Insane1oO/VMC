@@ -15,7 +15,7 @@ SlaterJastrow::~SlaterJastrow() {
 Eigen::RowVectorXd SlaterJastrow::getGradient(const unsigned int& p) {
     /* return the sum of gradient with respect to Jastrow factor and Slater
      * determinant for particle p */
-    return m_gradient.row(p) + m_jastrowGradientMatrix.row(p);
+    return Slater::m_gradient.row(p) + m_jastrowGradientMatrix.row(p);
 } // end function getGradient
 
 const double& SlaterJastrow::getJastrowGradient(const unsigned int& p, const
@@ -107,7 +107,7 @@ void SlaterJastrow::calculateGradient(const unsigned int &p) {
 double SlaterJastrow::kineticEnergy() {
     /* return kinetic term (full expression) */
     return 0.5 * (Slater::laplacian() + jastrowLaplacian()) +
-        m_gradient.cwiseProduct(m_jastrowGradientMatrix).sum();
+        Slater::m_gradient.cwiseProduct(m_jastrowGradientMatrix).sum();
 } // end function kineticEnergy
 
 void SlaterJastrow::initializeMatrices() {
@@ -124,19 +124,19 @@ void SlaterJastrow::set(const Eigen::MatrixXd newPositions) {
     /* set new positions and calculate new values for all matrices */
     Slater::set(newPositions);
 
-    calculateGradient();
+    SlaterJastrow::calculateGradient();
 } // end function set
 
 void SlaterJastrow::acceptState(const unsigned int& p) {
     /* accept state and update wavefunction */
-    acceptGradient(p);
+    SlaterJastrow::acceptGradient(p);
 
     Slater::acceptState(p);
 } // end function acceptState
 
 void SlaterJastrow::reset(const unsigned int& p) {
     /* reject state and revert to old wavefunction */
-    resetGradient(p);
+    SlaterJastrow::resetGradient(p);
 
     Slater::reset(p);
 } // end function reset

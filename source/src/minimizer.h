@@ -87,7 +87,7 @@ class Minimizer {
         void setParamsMTLS() {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
-            pMTLS.mu = 0.001;
+            pMTLS.mu = 0.0001;
             pMTLS.eta = 0.6;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
@@ -104,7 +104,7 @@ class Minimizer {
         void minimizeSD() {
             /* find optimal variational parameters */
             if (!hasSetup) {
-                step = 0.1;
+                step = 0.02;
 
                 hasSetup = true;
             } // end if
@@ -256,11 +256,11 @@ class Minimizer {
                     vmc, static_cast<double(VMC<T>::*)(const Eigen::VectorXd&,
                         const unsigned int)>(&VMC<T>::sampler),
                     &VMC<T>::getNewDerivativeParameters, 0);
-            vmc->setParameters(vmc->m_oldParameters + s*searchDirection);
 
             // evaluate new derivatives and values and update search direction
             // according to Polak-Ribiere method (forcing b to be such that the
             // search direction is always a descent direction)
+            vmc->setParameters(vmc->m_oldParameters + s*searchDirection);
             vmc->sampler();
             if (FTSIP()) {
                 /* Only update is sample behaves */
@@ -597,9 +597,9 @@ class Minimizer {
                 std::cout << std::setprecision(14) <<
                     Methods::stringPos(vmc->m_rank+3, vmc->m_numprocs) <<
                     vmc->getAcceptance() << "       " <<
-                    vmc->m_newDerivativeParameters.norm() << "      \n" <<
-//                     vmc->m_newDerivativeParameters.transpose() << "     " <<
-                    vmc->wf->m_parameters << "   " <<
+                    vmc->m_newDerivativeParameters.norm() << "      \n\n" <<
+                    vmc->m_newDerivativeParameters << "     \n\n" <<
+                    vmc->wf->m_parameters << "   \n\n" <<
                     "    " << vmc->m_accumulativeValues.energy << "   " <<
                     (vmc->m_accumulativeValues.energySquared -
                      vmc->m_accumulativeValues.energy *

@@ -118,6 +118,8 @@ class Slater : public WF {
         void acceptState(const unsigned int&);
         
         void acceptGradient(const unsigned int&);
+
+        double kineticEnergy();
        
         const unsigned int& getSpan() const;
         const unsigned int &getDimension() const;

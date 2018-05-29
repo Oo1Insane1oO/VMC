@@ -50,7 +50,6 @@ class HartreeFock : public HartreeFockBasis {
         void checkIfFullShell();
 
         double potentialEnergy();
-        double kineticEnergy();
 
         double calculateWavefunction(const unsigned int&, const unsigned int&);
         

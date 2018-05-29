@@ -10,7 +10,6 @@ class Bruteforce : public VMC<T> {
             /* calculate and set new positions, distances, wavefunction,
              * derivatives and parameters */
             VMC<T>::m_accumulativeValues = 0;
-            VMC<T>::wf->setParameters(VMC<T>::wf->m_parameters);
 
             Eigen::MatrixXd newPositions =
                 Eigen::MatrixXd::Zero(VMC<T>::numParticles, VMC<T>::m_dim);

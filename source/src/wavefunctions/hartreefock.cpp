@@ -303,9 +303,4 @@ double HartreeFock::potentialEnergy() {
     return P;
 } // end function potentialEnergy
 
-double HartreeFock::kineticEnergy() {
-    /* calculate and return kinetic energy */
-    return 0.5 * slater->laplacian();
-} // end function kineticEnergy
-
 #endif

@@ -208,7 +208,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
             MPI_DOUBLE, parametersBuffer.data(), numVariationalParameters,
             MPI_DOUBLE, 0, MPI_COMM_WORLD);
     #endif
-    if (myRank == 0) {
+    if (myRank == 0 && numProcs > 1) {
         /* choose parameters which give lowest(stable) energy */
         for (unsigned int p = 0; p < numProcs; ++p) {
             if (acceptances(p) < threshold<Sampler, T>()) {

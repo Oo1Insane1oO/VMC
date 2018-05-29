@@ -232,7 +232,7 @@ void Slater::setVariationalDerivatives() {
                 for (unsigned int j = 0; j < halfSize; ++j) {
                     m_firstDerivativesParameters(l) +=
                         (this->*(variationalDerivativeFunctionList .
-                                 at(l)))(i,j,l)
+                                 at(l)))(i,j,m_parameters(l))
                         * m_newWavefunctionMatrixInverse.block(jj, 0, halfSize,
                                 halfSize)(j,ii);
                 } // end forj
@@ -299,11 +299,11 @@ void Slater::set(const Eigen::MatrixXd& newPositions) {
     m_newPositions = newPositions;
     m_oldPositions = m_newPositions;
 
-    wfset<WF, const Eigen::MatrixXd&>(static_cast<WF*>(this),newPositions);
-
     setDistances();
     m_oldDistances = m_newDistances;
     m_oldDistanceMatrix = m_newDistanceMatrix;
+
+    wfset<WF, const Eigen::MatrixXd&>(static_cast<WF*>(this),newPositions);
 
     setWavefunction();
     m_oldWavefunctionMatrix = m_newWavefunctionMatrix;
@@ -454,6 +454,7 @@ void Slater::reset(const unsigned int& p) {
     m_newWavefunctionMatrix.row(p) = m_oldWavefunctionMatrix.row(p);
     m_newWavefunctionMatrixInverse.block(waveIdx, 0, halfSize, halfSize) =
         m_oldWavefunctionMatrixInverse.block(waveIdx, 0, halfSize, halfSize);
+
     determinantRatio = 1.;
 } // end function reset
 
@@ -558,3 +559,8 @@ double Slater::laplacian() {
 
     return sum;
 } // end function laplacian
+
+double Slater::kineticEnergy() {
+    /* calculate and return kinetic energy */
+    return 0.5 * laplacian();
+} // end function kineticEnergy

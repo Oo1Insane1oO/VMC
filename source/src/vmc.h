@@ -105,9 +105,9 @@ class VMC {
                  * along with derivatives with respect to variational
                  * parameters */
                 calculateLocalValues();
-                accumulateLocalValues();
-
                 wf->setVariationalDerivatives();
+
+                accumulateLocalValues();
                 accumulateLocalDerivatives();
             } else if (!accepted && (i>0)) {
                 /* use old energies and derivatves in case of rejection */

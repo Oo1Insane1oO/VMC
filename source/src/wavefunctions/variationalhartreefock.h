@@ -13,7 +13,7 @@ class Slater;
 
 class VariationalHartreeFock : public VariationalHartreeFockBasis {
     private:
-        double omega, omegaSq, sqrtOmega, aw, awSq, sqrtaw;
+        double omega, omegaSq, sqrtOmega, aw, sqrtaw;
         unsigned int m_numBasis;
 
         bool m_interaction, isFull;
@@ -50,7 +50,6 @@ class VariationalHartreeFock : public VariationalHartreeFockBasis {
         void checkIfFullShell();
 
         double potentialEnergy();
-        double kineticEnergy();
 
         double calculateWavefunction(const unsigned int&, const unsigned int&);
         

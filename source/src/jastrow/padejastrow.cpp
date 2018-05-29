@@ -141,8 +141,8 @@ void PadeJastrow::calculateGradient() {
 
 void PadeJastrow::calculateGradient(const unsigned int& p) {
     /* calculate gradient for row p */
-    Methods::symSwapNoDiag(m_oldJastrowGradient3DMatrix,
-            m_jastrowGradient3DMatrix, p, SJ->getSpan());
+    Methods::symSwap(m_oldJastrowGradient3DMatrix, m_jastrowGradient3DMatrix,
+            p);
     
     for (unsigned int j = p+1; j < SJ->m_numParticles; ++j) {
         m_jastrowGradient3DMatrix(p,j) = jastrowGradientExpression(p,j);
@@ -164,12 +164,16 @@ const Eigen::VectorXd& PadeJastrow::gradient(const unsigned int& p) {
 
 void PadeJastrow::resetGradient(const unsigned int& p) {
     /* revert to old gradient */
-    Methods::symSwapNoDiag(m_oldJastrowGradient3DMatrix,
-            m_jastrowGradient3DMatrix, p, SJ->getSpan());
+//     Methods::symSwapNoDiag(m_oldJastrowGradient3DMatrix,
+//             m_jastrowGradient3DMatrix, p, SJ->getSpan());
+    Methods::symSwap(m_oldJastrowGradient3DMatrix, m_jastrowGradient3DMatrix,
+            p);
 } // end function resetGradient
 
 void PadeJastrow::acceptGradient(const unsigned int& p) {
     /* accept gradient */
-    Methods::symSwapNoDiag(m_oldJastrowGradient3DMatrix,
-            m_jastrowGradient3DMatrix, p, SJ->getSpan());
+//     Methods::symSwapNoDiag(m_oldJastrowGradient3DMatrix,
+//             m_jastrowGradient3DMatrix, p, SJ->getSpan());
+    Methods::symSwap(m_oldJastrowGradient3DMatrix, m_jastrowGradient3DMatrix,
+            p);
 } // end function acceptGradient

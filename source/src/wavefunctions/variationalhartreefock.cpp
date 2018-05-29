@@ -34,9 +34,10 @@ void VariationalHartreeFock::setParameters(const Eigen::VectorXd& newParameters)
     /* update parameters */
     /* Set any extra parameters (i.e alpha) here if needed */
     slater->m_parameters = newParameters;
+
     aw = newParameters(0)*omega;
-    awSq = aw*aw;
     sqrtaw = sqrt(aw);
+
     setHermiteNormalizations();
 } // end function setParameters
 
@@ -169,13 +170,13 @@ void VariationalHartreeFock::initializeMatrices() {
     m_hermite3DMatrix = Eigen::Matrix<Eigen::VectorXd, Eigen::Dynamic,
                       Eigen::Dynamic>::Constant(slater->m_numParticles,
                               slater->m_dim, Eigen::VectorXd::Zero(
-                                  VariationalHartreeFockBasis::Cartesian::getn()
-                                  .  size()));
+                                  VariationalHartreeFockBasis::Cartesian::
+                                  getn() . size()));
     m_oldHermite3DMatrix = Eigen::Matrix<Eigen::VectorXd, Eigen::Dynamic,
                          Eigen::Dynamic>::Constant(slater->m_numParticles,
                                  slater->m_dim, Eigen::VectorXd::Zero(
-                                     VariationalHartreeFockBasis::Cartesian::getn()
-                                     .  size()));
+                                     VariationalHartreeFockBasis::Cartesian::
+                                     getn() . size()));
 } // end function setMatricesToZero
 
 void VariationalHartreeFock::setHermiteNormalizations() {
@@ -183,7 +184,6 @@ void VariationalHartreeFock::setHermiteNormalizations() {
     for (unsigned int i = 0; i < m_hermiteNormalizations.size(); ++i) {
         m_hermiteNormalizations(i) = sqrt(sqrtaw / (sqrt(M_PI) * pow(2,i) *
                     boost::math::factorial<double>(i)));
-        // FIXME: CALL NORMALIATION FOR ALL MINIMIZATION ITERATIONS(ALPHA DEPENDENCE)
     } // end fori
 } // end function setHermiteNormalizations
 
@@ -207,8 +207,8 @@ void VariationalHartreeFock::setBasisWavefunction(const unsigned int& p) {
     } // end forl
 } // end function setBasisWavefunction
 
-void VariationalHartreeFock::update(const Eigen::VectorXd& newPosition, const unsigned int&
-        p) {
+void VariationalHartreeFock::update(const Eigen::VectorXd& newPosition, const
+        unsigned int& p) {
     /* update position for particle p and calculate new wavefunction, keep old
      * values */
     /* update any matrix/vector dependant on the position or wavefunction here.
@@ -257,12 +257,6 @@ double VariationalHartreeFock::calculateWavefunction(const unsigned int& p,
     /* fill in */
     double res = 0.0;
     for (Eigen::SparseMatrix<double>::InnerIterator lIt(m_C, j); lIt; ++lIt) {
-//         double lprod = lIt.value();
-//         for (unsigned int d = 0; d < slater->m_dim; ++d) {
-//             const int& n = HartreeFockBasis::getn(lIt.row(),d);
-//             lprod *= m_hermite3DMatrix(p,d)(n) * m_hermiteNormalizations(n);
-//         } // end ford
-//         res += lprod; 
         res += lIt.value() * m_SWavefunctionMatrix(p,lIt.row());
     } // end forl
     return res;
@@ -305,7 +299,7 @@ const Eigen::VectorXd& VariationalHartreeFock::laplacianExpression(const
                     lsum -= 4*n/m_hermite3DMatrix(i,d)(n) *
                         m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1);
                 } else {
-                    lsum += 4*n/ m_hermite3DMatrix(i,d)(n) *
+                    lsum += 4*n/m_hermite3DMatrix(i,d)(n) *
                         ((n-1)*m_hermite3DMatrix(i,d)(n-2) -
                          m_SnewPositions(i,d)*m_hermite3DMatrix(i,d)(n-1));
                 } // end if
@@ -333,10 +327,5 @@ double VariationalHartreeFock::potentialEnergy() {
     } // end if
     return P;
 } // end function potentialEnergy
-
-double VariationalHartreeFock::kineticEnergy() {
-    /* calculate and return kinetic energy */
-    return 0.5 * slater->laplacian();
-} // end function kineticEnergy
 
 #endif

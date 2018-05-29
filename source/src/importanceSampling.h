@@ -45,7 +45,6 @@ class ImportanceSampling : public VMC<T> {
              * switched on */
             setup();
             VMC<T>::m_accumulativeValues = 0;
-            VMC<T>::setParameters(VMC<T>::wf->m_parameters);
 
             Eigen::MatrixXd newPositions =
                 Eigen::MatrixXd::Zero(VMC<T>::numParticles, VMC<T>::m_dim);
