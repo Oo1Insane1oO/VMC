@@ -93,7 +93,7 @@ class Minimizer {
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 10.0;
+            pMTLS.aMax0 = 1.0;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
