@@ -87,13 +87,13 @@ class Minimizer {
         void setParamsMTLS() {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
-            pMTLS.mu = 0.0001;
+            pMTLS.mu = 0.001;
             pMTLS.eta = 0.6;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 1.0;
+            pMTLS.aMax0 = 0.1;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -104,7 +104,7 @@ class Minimizer {
         void minimizeSD() {
             /* find optimal variational parameters */
             if (!hasSetup) {
-                step = 0.001;
+                step = 0.5;
 
                 hasSetup = true;
             } // end if
@@ -113,7 +113,9 @@ class Minimizer {
             Methods::steepestDescent<double>(step, vmc->wf->m_parameters,
                     static_cast<Eigen::VectorXd>(vmc->m_newDerivativeParameters
                         / vmc->m_newDerivativeParameters.norm()));
-            vmc->sampler();
+            if (FTSIP()) {
+                vmc->sampler();
+            } // end if
         } // end function minimizeSD
 
         void minimizeSABFGS() {
@@ -152,7 +154,8 @@ class Minimizer {
             setSteps();
             
             // sample new values;
-            vmc->sampler(vmc->m_oldParameters + step*searchDirection);
+            vmc->setParameters(vmc->m_oldParameters + step*searchDirection);
+            vmc->sampler();
             if (FTSIP()) {
                 /* make sure sample is good */
                 if (Methods::strongWolfeCondition(beta,
@@ -331,7 +334,7 @@ class Minimizer {
                         bestEnergy*bestEnergy) / vmc->m_maxIterations;
                 oldEnergy = vmc->getEnergy();
                 maxValue = 10.;
-                tempMax = 10.;
+                tempMax = 50.;
                 temp = tempMax;
                 sianIdx = 1;
 
@@ -342,7 +345,7 @@ class Minimizer {
             Eigen::ArrayXd newParameters =
                 Eigen::ArrayXd::Zero(vmc->wf->m_parameters.size()) .
                 unaryExpr([](double val) {
-                        std::normal_distribution<double> nd(val, 0.1);
+                        std::normal_distribution<double> nd(val, 1.0);
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::
                                         high_resolution_clock::now() .

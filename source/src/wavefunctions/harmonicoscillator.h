@@ -12,7 +12,7 @@ class Slater;
 
 class Quantumdot : public QuantumdotBasis {
     private:
-        double alpha, beta, omega, omegaSq, aw, sqaw;
+        double alpha, omega, omegaSq, aw, sqaw;
         
         bool m_interaction;
         
@@ -40,7 +40,6 @@ class Quantumdot : public QuantumdotBasis {
         void setInteraction(bool);
 
         double potentialEnergy();
-        double kineticEnergy();
 
         double calculateWavefunction(const unsigned int&, const unsigned int&);
         

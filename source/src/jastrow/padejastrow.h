@@ -10,7 +10,7 @@ class SlaterJastrow;
 class PadeJastrow {
     private:
         unsigned int m_parametersDispl, m_numJastrowParameters;
-        double parallelSpinFactor, antiParallelSpinFactor;
+        double parallelSpinFactor, antiParallelSpinFactor, dimMinusOne;
 
         Eigen::VectorXd m_jastrowGradientVector;
         

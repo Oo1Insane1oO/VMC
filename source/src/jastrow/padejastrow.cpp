@@ -6,6 +6,8 @@ PadeJastrow::PadeJastrow(SlaterJastrow* sjin) {
     /* initialize dimnsions and number of particles */
     SJ = sjin;
 
+    dimMinusOne = SJ->m_dim-1;
+
     // set spin factors that ensures cusp-conditions
     if (SJ->m_dim == 2) {
         /* 2D case */
@@ -99,7 +101,7 @@ double PadeJastrow::jastrowWavefunctionRatioExpression(const unsigned int& i,
 
 const Eigen::VectorXd& PadeJastrow::jastrowGradientExpression(const unsigned
         int& i, const unsigned int& j) {
-    /* calculate and return log of ratio between gradient and wavefunction for
+    /* calculate and return the ratio between gradient and wavefunction for
      * indices i,j */
     double denom = 1 + SJ->m_parameters(m_parametersDispl) *
         SJ->getNewDistance(i,j);
@@ -116,7 +118,7 @@ double PadeJastrow::jastrowLaplacian() {
         for (unsigned int j = i+1; j < SJ->m_numParticles; ++j) {
             double denom = 1. / (1 + beta * SJ->getNewDistance(i,j));
             res += spinFactor(i,j) * (denom*denom) *
-                ((SJ->m_dim-1)/SJ->getNewDistance(i,j) - 2*beta * denom) +
+                (dimMinusOne/SJ->getNewDistance(i,j) - 2*beta * denom) +
                 m_jastrowGradient3DMatrix(i,j).squaredNorm();
         } // end forj
     } // end fori

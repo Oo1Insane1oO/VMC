@@ -41,7 +41,6 @@ void Quantumdot::setParameters(const Eigen::VectorXd& newParameters) {
     /* update parameters */
     slater->m_parameters = newParameters;
     alpha = newParameters(0);
-    beta = newParameters(1);
     aw = alpha*omega;
     sqaw = sqrt(aw);
 } // end function setParameters
@@ -184,11 +183,12 @@ double Quantumdot::gradientExpression(const unsigned int& p, const int& j,
     /* calculate gradient expression */
     const int& n = QuantumdotBasis::getn(j,d);
     if (n==0) {
-        return - m_SnewPositions(p,d) * slater->getWavefunction(p,j);
+        return - sqaw * m_SnewPositions(p,d) * slater->getWavefunction(p,j);
+    } else {
+        return sqaw * (2*n * m_hermite3DMatrix(p,d)(n-1) /
+                m_hermite3DMatrix(p,d)(n) - m_SnewPositions(p,d)) *
+            slater->getWavefunction(p,j);
     } // end if
-    return sqaw * (2*n * m_hermite3DMatrix(p,d)(n-1) /
-            m_hermite3DMatrix(p,d)(n) - m_SnewPositions(p,d)) *
-        slater->getWavefunction(p,j);
 } // end function calculateGradient
 
 const Eigen::VectorXd& Quantumdot::laplacianExpression(const unsigned int& i,
@@ -242,10 +242,5 @@ double Quantumdot::potentialEnergy() {
     } // end if
     return P;
 } // end function potentialEnergy
-
-double Quantumdot::kineticEnergy() {
-    /* calculate and return kinetic energy */
-    return 0.5 * slater->laplacian();
-} // end function kineticEnergy
 
 #endif
