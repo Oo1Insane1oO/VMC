@@ -104,7 +104,7 @@ class Minimizer {
         void minimizeSD() {
             /* find optimal variational parameters */
             if (!hasSetup) {
-                step = 0.02;
+                step = 0.001;
 
                 hasSetup = true;
             } // end if

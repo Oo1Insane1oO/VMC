@@ -21,7 +21,7 @@ template<class T>
 class VMC {
     friend class Minimizer<T>;
     private:
-        unsigned int m_bins;
+        unsigned int m_bins, thermalizationIdx;
         double m_rBinsMax, m_rStep;
         Eigen::ArrayXd m_histogram;
 
@@ -96,11 +96,18 @@ class VMC {
                 wf->getVariationalDerivatives() * tmpEnergy * tmpEnergy;
         } // end function accumulateLocalDerivatives
 
-        void accumulateSample(unsigned int& i, const bool& accepted) {
+        void accumulateSample(const unsigned int& i, const bool& accepted) {
             /* sum up values, only calculate new values if state is accepted
              * (that is if accepted is true) */
+            
+            if (i < thermalizationIdx) {
+                return;
+            } else if (i == thermalizationIdx) {
+                m_accumulativeValues.acceptance = (accepted ? 1 :
+                        0);
+            } // end if
 
-            if (accepted || (i==0)) {
+            if (accepted || (i==thermalizationIdx)) {
                 /* calculate local energy and save kinetic and potential parts
                  * along with derivatives with respect to variational
                  * parameters */
@@ -122,7 +129,7 @@ class VMC {
             // gather values for resampling
             if (rs) {
                 /* gather values for resampling if resampler object is given */
-                rs->samples(i) = tmpEnergy;
+                rs->samples(i-thermalizationIdx) = tmpEnergy;
             } // end if
         } // end function accumulateSample
 
@@ -136,6 +143,8 @@ class VMC {
                 myRank, int numprocs) {
             /* initialize Slater object */
             wf = wavefunction;
+
+            thermalizationIdx = 50000;
 
             m_makeOnebodyDensities = false;
 
@@ -191,7 +200,8 @@ class VMC {
 
             // make sample
             bool accepted;
-            for (unsigned int i = 0; i < m_maxIterations; ++i) {
+            unsigned int iterations = m_maxIterations + thermalizationIdx;
+            for (unsigned int i = 0; i < iterations; ++i) {
                 /* sample values */
                 accepted = sample();
 
@@ -201,13 +211,13 @@ class VMC {
                 // print progress
                 if (progressDivider) {
                     /* show progress if given */
-                    if (!(static_cast<int>(fmod(i, Methods::divider(i, m_maxIterations,
+                    if (!(static_cast<int>(fmod(i, Methods::divider(i, iterations,
                                             progressDivider))))) {
                         /* print only a few times */
                         progressBuffer = progressPosition;
                         Methods::printProgressBar(progressBuffer,
-                                (float)((i==m_maxIterations-1) ? i : (i+1)) /
-                                m_maxIterations, 55, "VMC");
+                                (float)((i==iterations-1) ? i : (i+1)) /
+                                iterations, 23, "VMC");
                     } // end if
                 } // end if
             } // end fori
