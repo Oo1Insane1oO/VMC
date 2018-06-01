@@ -7,6 +7,12 @@
     using WF = Quantumdot;
 #endif
 
+#ifdef HARTREEFOCKDOUBLEWELL
+    #include "wavefunctions/hartreefockdoublewell.h"
+    class HartreeFockDoubleWell;
+    using WF = HartreeFockDoubleWell;
+#endif
+
 #ifdef HARTREEFOCK 
     #include "wavefunctions/hartreefock.h"
     class HartreeFock;

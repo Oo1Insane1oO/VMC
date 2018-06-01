@@ -48,6 +48,33 @@ double run(const std::string&);
 double run(YAML::Node& inputs);
 bool checkInputFile(YAML::Node&);
 
+#ifdef HARTREEFOCKDOUBLEWELL
+template<class T> T* setWavefunction(YAML::Node& inputs, const Eigen::MatrixXd&
+        parameters) {
+    unsigned int numParticles = inputs["numparticles"].as<unsigned int>();
+    unsigned int numBasis = inputs["numbasis"].as<unsigned int>();
+    YAML::Node coeffNode = inputs["coeffs"];
+    Eigen::MatrixXd coeffs(numBasis, numParticles);
+    for (unsigned int i = 0; i < coeffNode.size(); ++i) {
+        for (unsigned int j = 0; j < coeffNode[i].size(); ++j) {
+            /* stack coefficients to be the same for spin up and down(spacial
+             * part is same for both spin states) */
+            coeffs(j,i) = coeffNode[i][j].as<double>();
+            coeffs(j,i+numParticles/2) = coeffNode[i][j].as<double>();
+        } // end forj
+    } // end fori
+
+    unsigned int dim = inputs["dim"].as<unsigned int>();
+    T* wf = new T(dim, numParticles, parameters);
+    wf->initializeParameters(inputs["omega"].as<double>(), coeffs);
+    wf->initializeMatrices(); // FIXME: Change routine...
+
+    //FIXME: error in case Slater ir not full
+
+    return wf;
+} // end function setWavefunction
+#endif
+
 #if defined HARTREEFOCK || defined VARIATIONALHARTREEFOCK
 template<class T> T* setWavefunction(YAML::Node& inputs, const Eigen::MatrixXd&
         parameters) {
