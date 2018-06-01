@@ -51,7 +51,7 @@ void HartreeFock::checkIfFullShell() {
 } // end function checkIfFullShell
 
 void HartreeFock::initializeParameters(const double& w, const unsigned int& L,
-        const Eigen::MatrixXd& coefficientMatrix) {
+        Eigen::MatrixXd coefficientMatrix) {
     /* set number of particles and allocate space for matrices. Set Cartesian
      * basis initialized for L basisfunctions(actually 2*L because of spin).
      * Also take in coefficient matrix */
@@ -64,9 +64,6 @@ void HartreeFock::initializeParameters(const double& w, const unsigned int& L,
    // initialize basis (wrapper)
     HartreeFockBasis::setup(2*L, slater->m_dim);
 
-    m_C = coefficientMatrix.sparseView(1,1e-6);
-    m_C.makeCompressed();
-   
     // set normalizations
     m_hermiteNormalizations =
         Eigen::ArrayXd::Zero(HartreeFockBasis::getn().size());
@@ -75,7 +72,10 @@ void HartreeFock::initializeParameters(const double& w, const unsigned int& L,
     checkIfFullShell();
 
     // precalculate normalization factors
-    setHermiteNormalizations();
+    setHermiteNormalizations(coefficientMatrix);
+
+    m_C = coefficientMatrix.sparseView(1,1e-6);
+    m_C.makeCompressed();
 } // end function initializeParameters 
 
 void HartreeFock::set(const Eigen::MatrixXd& newPositions) {
@@ -148,12 +148,19 @@ void HartreeFock::initializeMatrices() {
                                      size()));
 } // end function setMatricesToZero
 
-void HartreeFock::setHermiteNormalizations() {
+void HartreeFock::setHermiteNormalizations(Eigen::MatrixXd& coefficientMatrix) {
     /* calcualate normalization factors for hermite functions */
     for (unsigned int i = 0; i < m_hermiteNormalizations.size(); ++i) {
         m_hermiteNormalizations(i) = sqrt(sqrt(omega) / (sqrt(M_PI) * pow(2,i)
                     * boost::math::factorial<double>(i)));
     } // end fori
+    for (unsigned int j = 0; j < coefficientMatrix.rows(); ++j) {
+        for (unsigned int d = 0; d < slater->m_dim; ++d) {
+            coefficientMatrix.row(j) *=
+                m_hermiteNormalizations(HartreeFockBasis::
+                        Cartesian::getn(j,d));
+        } // end ford
+    } // end forj
 } // end function setHermiteNormalizations
 
 void HartreeFock::setBasisWavefunction() {
@@ -170,8 +177,7 @@ void HartreeFock::setBasisWavefunction(const unsigned int& p) {
         m_SWavefunctionMatrix(p,l) = expFactor;
         for (unsigned int d = 0; d < slater->m_dim; ++d) {
             const int& n = HartreeFockBasis::getn(l,d);
-            m_SWavefunctionMatrix(p,l) *= m_hermite3DMatrix(p,d)(n) *
-                m_hermiteNormalizations(n);
+            m_SWavefunctionMatrix(p,l) *= m_hermite3DMatrix(p,d)(n);
         } // end ford
     } // end forl
 } // end function setBasisWavefunction

@@ -35,15 +35,15 @@ class HartreeFock : public HartreeFockBasis {
 
         void setBasisWavefunction(const unsigned int&);
         void setBasisWavefunction();
-        void setHermiteNormalizations();
+        void setHermiteNormalizations(Eigen::MatrixXd&);
 
     public:
         HartreeFock(Slater*);
         virtual ~HartreeFock();
         
         void setParameters(const Eigen::VectorXd&);
-        void initializeParameters(const double&, const unsigned int&, const
-                Eigen::MatrixXd&);
+        void initializeParameters(const double&, const unsigned int&,
+                Eigen::MatrixXd);
         void setInteraction(bool);
         
         std::string setupDone();

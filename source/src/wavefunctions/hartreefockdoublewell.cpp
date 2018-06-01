@@ -37,8 +37,8 @@ void HartreeFockDoubleWell::setInteraction(bool t) {
     m_interaction = t;
 } // end function setInteraction
 
-void HartreeFockDoubleWell::initializeParameters(const double& w, const
-        Eigen::MatrixXd& coefficientMatrix) {
+void HartreeFockDoubleWell::initializeParameters(const double& w,
+        Eigen::MatrixXd coefficientMatrix) {
     /* set number of particles and allocate space for matrices */
     omega = w;
     omegaSq = w * w;
@@ -49,19 +49,27 @@ void HartreeFockDoubleWell::initializeParameters(const double& w, const
     m_numBasis = HartreeFockDoubleWellBasis::DWC::C.rows();
     
     /* fill in any matrices dependant on sizes from basis here */
-
-    m_C = coefficientMatrix.sparseView(1,1e-6);
-    m_C.makeCompressed();
    
     // set normalizations
     m_hermiteNormalizations =
         Eigen::ArrayXd::Zero(HartreeFockDoubleWellBasis::getn().size());
-    
-    //FIXME: error in case Slater ir not full
+
+    //FIXME: error in case Slater is not full
 
     // precalculate normalization factors
     setHermiteNormalizations();
 
+    for (unsigned int i = 0; i < coefficientMatrix.rows(); ++i) {
+        double normval = 0.0;
+        for (Eigen::SparseMatrix<double>::InnerIterator lIt(DWC::C,i); lIt;
+                ++lIt) {
+            normval += lIt.value()*lIt.value();
+        } // end forlIt
+        coefficientMatrix.row(i) /= sqrt(normval);
+    } // end fori
+
+    m_C = coefficientMatrix.sparseView(1,1e-6);
+    m_C.makeCompressed();
 } // end function initializeParameters
 
 void HartreeFockDoubleWell::set(const Eigen::MatrixXd& newPositions) {
@@ -124,6 +132,17 @@ void HartreeFockDoubleWell::setHermiteNormalizations() {
         m_hermiteNormalizations(i) = sqrt(sqrt(omega) / (sqrt(M_PI) * pow(2,i)
                     * boost::math::factorial<double>(i)));
     } // end fori
+    for (unsigned int i = 0; i < DWC::C.outerSize(); ++i) {
+        for (Eigen::SparseMatrix<double>::InnerIterator lIt(DWC::C, i); lIt;
+                ++lIt) {
+            for (unsigned int d = 0; d < slater->m_dim; ++d) {
+                lIt.valueRef() *=
+                    m_hermiteNormalizations(HartreeFockDoubleWellBasis::
+                            Cartesian::getn(lIt.row(),d));
+            } // end ford
+        } // end forlIt
+    } // end fori
+    DWC::C.makeCompressed();
 } // end function setHermiteNormalizations
 
 void HartreeFockDoubleWell::setBasisWavefunction() {
@@ -140,8 +159,7 @@ void HartreeFockDoubleWell::setBasisWavefunction(const unsigned int& p) {
         m_SWavefunctionMatrix(p,l) = expFactor;
         for (unsigned int d = 0; d < slater->m_dim; ++d) {
             const int& n = HartreeFockDoubleWellBasis::getn(l,d);
-            m_SWavefunctionMatrix(p,l) *= m_hermite3DMatrix(p,d)(n) *
-                m_hermiteNormalizations(n);
+            m_SWavefunctionMatrix(p,l) *= m_hermite3DMatrix(p,d)(n);
         } // end ford
     } // end forl
 } // end function setBasisWavefunction
@@ -217,7 +235,7 @@ double HartreeFockDoubleWell::gradientExpression(const unsigned int& p, const
             const int& nd = HartreeFockDoubleWellBasis::getn(kIt.row(), d);
             if (nd==0) {
                 res -= lval * kIt.value() * m_SnewPositions(p,d) *
-                    m_SWavefunctionMatrix(p, kIt.value());
+                    m_SWavefunctionMatrix(p, kIt.row());
             } else {
                 res += lval * kIt.value() * (2*nd *
                         m_hermite3DMatrix(p,d)(nd-1) /
@@ -257,7 +275,7 @@ const Eigen::VectorXd& HartreeFockDoubleWell::laplacianExpression(const
                     } // end ifeifelse
                 } // end ford
                 m_laplacianSumVec(j) += lval * kIt.value() * lsum *
-                    m_SWavefunctionMatrix(i,kIt.row());
+                    m_SWavefunctionMatrix(i, kIt.row());
             } // end forkIt
         } // end forlIt
     } // end forj

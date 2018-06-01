@@ -34,13 +34,14 @@ class HartreeFockDoubleWell : public HartreeFockDoubleWellBasis {
         void setBasisWavefunction(const unsigned int&);
         void setBasisWavefunction();
         void setHermiteNormalizations();
+        void setHartreeFockBasisNormalizations();
 
     public:
         HartreeFockDoubleWell(Slater*);
         virtual ~HartreeFockDoubleWell();
         
         void setParameters(const Eigen::VectorXd&);
-        void initializeParameters(const double& , const Eigen::MatrixXd&);
+        void initializeParameters(const double& , Eigen::MatrixXd);
         void setInteraction(bool);
         
         std::string setupDone();
