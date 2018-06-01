@@ -61,7 +61,7 @@ void HartreeFock::initializeParameters(const double& w, const unsigned int& L,
 
     m_numBasis = L;
 
-   // initialize basis (wrapper)
+    // initialize basis (wrapper)
     HartreeFockBasis::setup(2*L, slater->m_dim);
 
     // set normalizations

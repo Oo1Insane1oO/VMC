@@ -10,11 +10,10 @@ class Slater;
 
 class HartreeFockDoubleWell : public HartreeFockDoubleWellBasis {
     private:
-        bool m_interaction, isFull;
-
+        double omega, omegaSq, sqrtOmega;
         unsigned int m_numBasis;
 
-        double omega, omegaSq, sqrtOmega;
+        bool m_interaction;
         
         Eigen::VectorXd m_laplacianSumVec;
         
@@ -24,7 +23,6 @@ class HartreeFockDoubleWell : public HartreeFockDoubleWellBasis {
         Slater* slater;
         
         Eigen::SparseMatrix<double> m_C;
-        Eigen::ArrayXd m_hermiteNormalizations;
         
         Eigen::Matrix<Eigen::VectorXd, Eigen::Dynamic, Eigen::Dynamic>
             m_hermite3DMatrix, m_oldHermite3DMatrix;
@@ -33,20 +31,17 @@ class HartreeFockDoubleWell : public HartreeFockDoubleWellBasis {
 
         void setBasisWavefunction(const unsigned int&);
         void setBasisWavefunction();
-        void setHermiteNormalizations();
-        void setHartreeFockBasisNormalizations();
 
     public:
         HartreeFockDoubleWell(Slater*);
         virtual ~HartreeFockDoubleWell();
         
         void setParameters(const Eigen::VectorXd&);
-        void initializeParameters(const double& , Eigen::MatrixXd);
+        void initializeParameters(const double& w, Eigen::MatrixXd);
         void setInteraction(bool);
-        
-        std::string setupDone();
 
         double potentialEnergy();
+        double kineticEnergy();
 
         double calculateWavefunction(const unsigned int&, const unsigned int&);
         
@@ -62,7 +57,9 @@ class HartreeFockDoubleWell : public HartreeFockDoubleWellBasis {
         void set(const Eigen::MatrixXd& newPositions);
         void update(const Eigen::VectorXd&,  const unsigned int&);
         void reset(const unsigned int&);
+        void resetGradient(const unsigned int&);
         void acceptState(const unsigned int&);
+        void acceptGradient(const unsigned int&);
 
     protected:
         std::vector<double(HartreeFockDoubleWell::*)(const unsigned int&, const unsigned int&,

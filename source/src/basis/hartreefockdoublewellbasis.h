@@ -6,16 +6,16 @@
 
 #include <Eigen/Dense>
 
-class HartreeFockDoubleWellBasis : public Cartesian, public DWC {
+class HartreeFockDoubleWellBasis : public DWC, Cartesian {
     private:
         unsigned int m_dim;
 
     public:
         HartreeFockDoubleWellBasis ();
-        HartreeFockDoubleWellBasis (unsigned int);
+        HartreeFockDoubleWellBasis (unsigned int, unsigned int);
         virtual ~HartreeFockDoubleWellBasis ();
 
-        void setup(unsigned int);
+        void setup(unsigned int, unsigned int);
 };
 
 #endif /* HARTREEFOCKDOUBLEWELLBASIS_H */
