@@ -87,13 +87,13 @@ class Minimizer {
         void setParamsMTLS() {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
-            pMTLS.mu = 0.001;
+            pMTLS.mu = 0.0001;
             pMTLS.eta = 0.6;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 0.1;
+            pMTLS.aMax0 = 2.0;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {

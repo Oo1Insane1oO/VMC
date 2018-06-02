@@ -16,7 +16,7 @@ bool checkInputFile(YAML::Node& inputs) {
 } // end function checkInputFile
 #endif
 
-#if defined HARTREEFOCK || VARIATIONALHARTREEFOCK || HARTREEFOCKDOUBLEWELL
+#if defined HARTREEFOCK || VARIATIONALHARTREEFOCK || HARTREEFOCKDOUBLEWELL || defined VARIATIONALHARTREEFOCKDOUBLEWELL
 bool checkInputFile(YAML::Node& inputs) {
     if (!inputs["omega"] || 
         !inputs["numparticles"] || 

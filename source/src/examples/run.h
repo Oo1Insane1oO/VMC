@@ -48,7 +48,7 @@ double run(const std::string&);
 double run(YAML::Node& inputs);
 bool checkInputFile(YAML::Node&);
 
-#ifdef HARTREEFOCKDOUBLEWELL
+#if defined HARTREEFOCKDOUBLEWELL || defined VARIATIONALHARTREEFOCKDOUBLEWELL
 template<class T> T* setWavefunction(YAML::Node& inputs, const Eigen::MatrixXd&
         parameters) {
     unsigned int numParticles = inputs["numparticles"].as<unsigned int>();

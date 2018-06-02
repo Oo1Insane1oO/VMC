@@ -13,6 +13,12 @@
     using WF = HartreeFockDoubleWell;
 #endif
 
+#ifdef VARIATIONALHARTREEFOCKDOUBLEWELL
+    #include "wavefunctions/variationalhartreefockdoublewell.h"
+    class VariationalHartreeFockDoubleWell;
+    using WF = VariationalHartreeFockDoubleWell;
+#endif
+
 #ifdef HARTREEFOCK 
     #include "wavefunctions/hartreefock.h"
     class HartreeFock;

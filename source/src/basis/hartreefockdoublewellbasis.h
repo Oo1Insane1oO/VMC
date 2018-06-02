@@ -12,7 +12,6 @@ class HartreeFockDoubleWellBasis : public Cartesian, public DWC {
 
     public:
         HartreeFockDoubleWellBasis ();
-        HartreeFockDoubleWellBasis (unsigned int);
         virtual ~HartreeFockDoubleWellBasis ();
 
         void setup(unsigned int);
