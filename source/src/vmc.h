@@ -226,7 +226,8 @@ class VMC {
                 /* dump histrogram to file */
                 Eigen::ArrayXd rVals = Eigen::ArrayXd::LinSpaced(m_bins,
                         m_rStep, m_rBinsMax);
-                m_histogram *= wf->getNumberOfParticles() / (m_histogram.sum()*rVals);
+                m_histogram *= wf->getNumberOfParticles() /
+                    (m_histogram.sum()*rVals.pow(m_dim-1));
                 writeHistogramToFile();
             } // end if
 
