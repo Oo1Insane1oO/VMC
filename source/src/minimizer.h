@@ -87,13 +87,13 @@ class Minimizer {
         void setParamsMTLS() {
             /* set parameters used in line search in CG and BFGS method */
             pMTLS.maxIterations = 10;
-            pMTLS.mu = 0.0001;
+            pMTLS.mu = 0.001;
             pMTLS.eta = 0.6;
             pMTLS.delta = 4.0;
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 2.0;
+            pMTLS.aMax0 = 2.5;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -601,7 +601,7 @@ class Minimizer {
                     Methods::stringPos(vmc->m_rank+3, vmc->m_numprocs) <<
                     vmc->getAcceptance() << "       " <<
                     vmc->m_newDerivativeParameters.norm() << "      \n\n" <<
-                    vmc->m_newDerivativeParameters << "     \n\n" <<
+//                     vmc->m_newDerivativeParameters.transpose() << "     \n\n" <<
                     vmc->wf->m_parameters << "   \n\n" <<
                     "    " << vmc->m_accumulativeValues.energy << "   " <<
                     (vmc->m_accumulativeValues.energySquared -

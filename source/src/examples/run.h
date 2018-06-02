@@ -28,10 +28,10 @@ template<class T, class W> constexpr double threshold() {
     /* return threshold for acceptance */
     if constexpr (std::is_same_v<T, ImportanceSampling<W>>) {
         /* case importance sampling */
-        return 0.96;
+        return 0.989;
     } else if (std::is_same_v<T, Bruteforce<W>>) {
         /* case bruteforce */
-        return 0.5;
+        return 0.53;
     } else {
         /* fail if type is not Bruteforce or ImportanceSampling */
         static_assert(std::disjunction_v<std::is_same<T, Bruteforce<W>>,
@@ -170,7 +170,7 @@ template<typename Sampler, typename T> void findOptimalParameters(YAML::Node&
                         static std::mt19937_64 rng(std::stoi(std::to_string(
                                         std::chrono::high_resolution_clock::now().
                                         time_since_epoch().count()).substr(10)));
-                        std::normal_distribution<double> nd(0.0,1.0);
+                        std::normal_distribution<double> nd(0.0,0.5);
                         return nd(rng);
                     });
             } else { 
