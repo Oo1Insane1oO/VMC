@@ -23,18 +23,23 @@ class VMC {
     private:
         unsigned int m_bins, thermalizationIdx;
         double m_rBinsMax, m_rStep;
+
         Eigen::ArrayXd m_histogram;
+        Eigen::ArrayXXd m_radial2DHistogram;
+        Eigen::Array<Eigen::ArrayXd, Eigen::Dynamic, Eigen::Dynamic>
+            m_radial3DHistogram;
 
         Eigen::VectorXd m_oldParameters, m_newDerivativeParameters,
             m_oldDerivativeParameters;
 
         std::string m_oneBodyDensityFilename;
+        std::string m_radialDensityFilename;
 
         std::uniform_int_distribution<unsigned int> discreteDistribution;
 
         double tmpPotentialEnergy, tmpKineticEnergy, tmpEnergy;
 
-        bool m_findStep, m_makeOnebodyDensities;
+        bool m_findStep, m_makeOnebodyDensities, m_makeRadialDensities;
 
         void derivativeVariational() {
             /* calculate derivative of expectation value */
@@ -51,6 +56,21 @@ class VMC {
 //                  m_accumulativeValues.psiDerivative);
         } // end function derivativeEnergy
 
+        void writeRadialHistogramToFile() {
+            /* write histogram for radial densities to file */
+            if (m_dim == 2) {
+                std::ofstream outfile;
+                outfile.open(m_radialDensityFilename);
+                outfile << m_radial2DHistogram;
+                outfile.close();
+            } else if (m_dim == 3) {
+                std::ofstream outfile;
+                outfile.open(m_radialDensityFilename);
+                outfile << m_radial3DHistogram;
+                outfile.close();
+            } // end ifeif
+        } // end function write3DHistogramToFile
+
         void writeHistogramToFile() {
             /* write histogram for one-body densities to file */
             std::ofstream outfile;
@@ -58,6 +78,23 @@ class VMC {
             outfile << m_histogram;
             outfile.close();
         } // end function writeHistogramToFile
+
+        void accumulateRadialDensities() {
+            for (unsigned int p = 0; p < wf->getNumberOfParticles(); ++p) {
+                for (unsigned int b = 0; b < m_bins; ++b) {
+                    if ((fabs(wf->getNewPosition(p,0)) >= b*m_rStep) &&
+                            (fabs(wf->getNewPosition(p,0)) < (b+1)*m_rStep)) {
+                        for (unsigned int a = 0; a < m_bins; ++a) {
+                            if ((fabs(wf->getNewPosition(p,1)) >= a*m_rStep) &&
+                                    (fabs(wf->getNewPosition(p,1)) <
+                                     (a+1)*m_rStep)) {
+                                m_radial2DHistogram(a,b) +=1;
+                            } // end if
+                        } // end fora
+                    } // end if
+                } // end forb
+            } // end forp
+        } // and funtion acumulateRadialDensities
 
         void accumulateOnebodyDensities() {
             /* increment histogram values */
@@ -126,6 +163,10 @@ class VMC {
                 accumulateOnebodyDensities();
             } // end if
 
+            if (m_makeRadialDensities) {
+                accumulateRadialDensities();
+            } // end if
+
             // gather values for resampling
             if (rs) {
                 /* gather values for resampling if resampler object is given */
@@ -147,6 +188,7 @@ class VMC {
             thermalizationIdx = 50000;
 
             m_makeOnebodyDensities = false;
+            m_makeRadialDensities = false;
 
             m_dim = wf->getDimension();
             m_findStep = false;
@@ -231,6 +273,15 @@ class VMC {
                 writeHistogramToFile();
             } // end if
 
+            if (m_makeRadialDensities) {
+                Eigen::ArrayXd rVals = Eigen::ArrayXd::LinSpaced(m_bins,
+                        m_rStep, m_rBinsMax);
+                for (unsigned int i = 0; i < m_radial2DHistogram.rows(); ++i) {
+                    m_radial2DHistogram.row(i) /= (m_radial2DHistogram.sum()*rVals*rVals);
+                } // end fori
+                writeRadialHistogramToFile();
+            } // end fi
+
             // average expectation values
             m_accumulativeValues /= m_maxIterations;
 
@@ -294,6 +345,16 @@ class VMC {
             m_histogram = Eigen::ArrayXd::Zero(nBins);
             m_makeOnebodyDensities = true;
         } // end function setOneBodyDensities
+
+        void setRadialDensities(std::string filename, unsigned int nBins,
+                double nRmax) {
+            m_radialDensityFilename = filename;
+            m_bins = nBins;
+            m_rBinsMax = nRmax;
+            m_rStep = m_rBinsMax / m_bins;
+            m_radial2DHistogram = Eigen::ArrayXXd::Zero(nBins, nBins);
+            m_makeRadialDensities = true;
+        } // end function setRadialDensities
 
         void setParameters(Eigen::VectorXd parameters) {
             /* set parameters */

@@ -393,6 +393,11 @@ template<class Sampler, class Wavefunction> double runSpecified(YAML::Node&
                     inputs["onebody"][1].as<unsigned int>(),
                     inputs["onebody"][2].as<double>());
         } // end if
+        if(inputs["radial"]) {
+            vmc->setRadialDensities(inputs["radial"][0].as<std::string>(),
+                    inputs["radial"][1].as<unsigned int>(),
+                    inputs["radial"][2].as<double>());
+        } // end if
         vmc->setMaxIterations(inputs["maxitermc"].as<unsigned int>());
         E = runFinalSampling(inputs, vmc, sampleTime);
     } // end if

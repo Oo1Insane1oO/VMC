@@ -128,8 +128,7 @@ void ExpNQS::calculateGradient(const unsigned int& p) {
 } // end function calculateGradient
 
 const Eigen::VectorXd& ExpNQS::gradient(const unsigned int& p) {
-    /* calculate and return gadient for row p */
-    /* return gradient for row p */
+    /* calculate and return gradient for row p */
     m_jastrowGradientVector = RBMJastrow::gradient(p) +
         m_jastrowGradient3DMatrix.row(p).sum();
 

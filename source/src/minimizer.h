@@ -93,7 +93,7 @@ class Minimizer {
             pMTLS.bisectWidth = 0.66;
             pMTLS.bracketTol = 1e-14;
             pMTLS.aMin0 = 0.0;
-            pMTLS.aMax0 = 2.5;
+            pMTLS.aMax0 = 2.0;
         } // end function setParamsMTLS
 
         void setParamsSABFGS() {
@@ -208,11 +208,11 @@ class Minimizer {
             // set search direction
             searchDirection = - hessianInverse *
                 vmc->m_oldDerivativeParameters;
-//             double sdNorm = searchDirection.norm();
-//             if (sdNorm >= 1e-10) {
-//                 /* dont normalize if close to minimum for stability */
-//                 searchDirection /= sdNorm;
-//             } // end if
+            double sdNorm = searchDirection.norm();
+            if (sdNorm >= 1e-10) {
+                /* dont normalize if close to minimum for stability */
+                searchDirection /= sdNorm;
+            } // end if
 
             // run linesearch
             double s = MTLS::linesearchMoreThuente<>(&pMTLS, searchDirection,
@@ -574,8 +574,11 @@ class Minimizer {
             setup();
             vmc->sampler();
             prevValue = vmc->m_accumulativeValues.energy;
-            std::ofstream outfile;
-            outfile.open("test1.txt");
+            std::ofstream outfile("w1.0_D2_N6_Energies.txt",
+                    std::ios_base::app);
+            outfile.precision(16);
+            outfile.setf(std::ios::fixed);
+            outfile.setf(std::ios::showpoint);
             for (unsigned int m = 0; m < m_runMax; ++m) {
                 /* run minimization */
 
@@ -594,6 +597,15 @@ class Minimizer {
                     prevValue = vmc->m_accumulativeValues.energy;
                 } // end if
 
+                if (currMethod.compare("SIAN")) {
+                    outfile << vmc->m_accumulativeValues.energy << " " <<
+                        (vmc->m_accumulativeValues.energySquared -
+                         vmc->m_accumulativeValues.energy *
+                         vmc->m_accumulativeValues.energy) /
+                        vmc->m_maxIterations << "\n";
+                    outfile.flush();
+                } // end if
+
                 // sample and minimize with specified method
                 (this->*minimizeFunction)();
 
@@ -602,12 +614,12 @@ class Minimizer {
                     vmc->getAcceptance() << "       " <<
                     vmc->m_newDerivativeParameters.norm() << "      \n\n" <<
 //                     vmc->m_newDerivativeParameters.transpose() << "     \n\n" <<
-                    vmc->wf->m_parameters << "   \n\n" <<
+//                     vmc->wf->m_parameters << "   \n\n" <<
                     "    " << vmc->m_accumulativeValues.energy << "   " <<
                     (vmc->m_accumulativeValues.energySquared -
                      vmc->m_accumulativeValues.energy *
                      vmc->m_accumulativeValues.energy) / vmc->m_maxIterations
-                    << std::endl;
+                    << "\n\n";
             } // end form
 
             // show 100% in end
